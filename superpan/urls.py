@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 from accounts.views import LoginView
 
 # Кастомизация админки
@@ -18,6 +19,8 @@ urlpatterns = [
     path('projects/', include('projects.urls')),
     path('kanban/', include('kanban.urls')),
     path('warehouse/', include('warehouse.urls')),
+    path('api/', include('api.urls')),
+    path('app/', TemplateView.as_view(template_name='react_app.html'), name='react_app'),
     path('', LoginView.as_view(), name='login'),  # Root redirects to login
 ]
 

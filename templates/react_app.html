@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SuperPan - React App{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'frontend/assets/index.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="react-root"></div>
+<script type="module" src="{% static 'frontend/assets/index.js' %}"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Передаем Django данные в React
+  window.DJANGO_DATA = {
+    user: {
+      id: '{{ user.id }}',
+      email: '{{ user.email }}',
+      username: '{{ user.username }}',
+      role: '{{ user.role }}',
+      first_name: '{{ user.first_name }}',
+      last_name: '{{ user.last_name }}'
+    },
+    csrfToken: '{{ csrf_token }}',
+    apiUrl: '{% url "api:api-root" %}',
+    isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }}
+  };
+</script>
+{% endblock %}

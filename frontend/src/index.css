@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-inter;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-500 to-primary-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-gray-50 active:scale-95;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all duration-200 hover:shadow-md;
+  }
+  
+  .input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
+  }
+  
+  .sidebar {
+    @apply bg-gradient-to-b from-primary-500 to-primary-700 text-white min-h-screen;
+  }
+  
+  .nav-link {
+    @apply flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200;
+  }
+  
+  .nav-link.active {
+    @apply text-white bg-white/20;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-500 to-primary-700 bg-clip-text text-transparent;
+  }
+  
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(44, 90, 160, 0.3);
+  }
+  
+  .backdrop-blur {
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .mobile-full {
+    @apply w-full h-full;
+  }
+  
+  .mobile-padding {
+    @apply px-4 py-3;
+  }
+  
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
+/* PWA specific styles */
+@media (display-mode: standalone) {
+  body {
+    @apply pt-safe-area-inset-top;
+  }
+}
+
+/* Loading animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Safe area for mobile devices */
+.pt-safe-area-inset-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.pb-safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
