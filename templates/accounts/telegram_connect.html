@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Подключить Telegram - SuperPan{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="telegram-icon me-3">
+                        <i class="bi bi-telegram" style="font-size: 3rem; color: #0088cc;"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-1">Подключить Telegram</h4>
+                        <p class="text-muted mb-0">Подключите ваш Telegram аккаунт для удобного управления задачами и получения уведомлений.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Текущий профиль -->
+                <div class="current-profile mb-4">
+                    <h6 class="fw-bold mb-3">Текущий профиль</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="user-avatar me-3">
+                            {{ user.first_name.0|default:user.email.0|upper }}
+                        </div>
+                        <div>
+                            <div class="fw-bold">{{ user.get_full_name|default:user.email }}</div>
+                            <div class="text-muted small">{{ user.email }}</div>
+                            <div class="text-muted small">{{ user.get_role_display }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Инструкции -->
+                <div class="instructions mb-4">
+                    <h6 class="fw-bold mb-3">Как подключить:</h6>
+                    <ol class="list-unstyled">
+                        <li class="mb-2">
+                            <span class="badge bg-primary me-2">1</span>
+                            Нажмите кнопку "Подключить Telegram" ниже
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-primary me-2">2</span>
+                            Откроется Telegram с нашим ботом
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-primary me-2">3</span>
+                            Нажмите /start в боте для авторизации
+                        </li>
+                        <li class="mb-2">
+                            <span class="badge bg-primary me-2">4</span>
+                            Ваш аккаунт будет автоматически привязан
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- Кнопка подключения -->
+                <div class="text-center">
+                    <a href="https://t.me/{{ bot_username }}" target="_blank" class="btn btn-primary btn-lg">
+                        <i class="bi bi-telegram me-2"></i>
+                        Подключить Telegram
+                    </a>
+                </div>
+
+                <!-- Дополнительная информация -->
+                <div class="mt-4">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle me-2"></i>Что дает подключение Telegram:</h6>
+                        <ul class="mb-0 small">
+                            <li>Управление задачами через бота</li>
+                            <li>Получение уведомлений о проектах</li>
+                            <li>Быстрый доступ к информации</li>
+                            <li>Создание задач голосом</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Навигация -->
+                <div class="text-center mt-4">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Назад к профилю
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.telegram-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #0088cc 0%, #006699 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.instructions li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.instructions li:last-child {
+    border-bottom: none;
+}
+
+.btn-lg {
+    padding: 12px 30px;
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

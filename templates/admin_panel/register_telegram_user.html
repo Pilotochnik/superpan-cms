@@ -1,0 +1,121 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block page_title %}Регистрация пользователя через Telegram{% endblock %}
+{% block page_subtitle %}Создание нового пользователя с привязкой к Telegram аккаунту{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb breadcrumb-admin">
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:users_list' %}">Пользователи</a></li>
+        <li class="breadcrumb-item active">Регистрация через Telegram</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-telegram me-2"></i>
+                    📱 Регистрация пользователя через Telegram
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Инструкция:</strong> Заполните форму данными пользователя из Telegram. 
+                    После регистрации пользователь сможет войти в систему через Telegram бота.
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="telegram_id" class="form-label">Telegram ID <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="telegram_id" name="telegram_id" 
+                                   placeholder="123456789" required>
+                            <div class="form-text">Уникальный ID пользователя в Telegram (можно получить через @userinfobot)</div>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label for="username" class="form-label">Username в Telegram</label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="@username">
+                            <div class="form-text">Необязательно, если есть</div>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label for="first_name" class="form-label">Имя <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                   placeholder="Иван" required>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <label for="last_name" class="form-label">Фамилия <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                   placeholder="Петров" required>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="role" class="form-label">Роль <span class="text-danger">*</span></label>
+                            <select class="form-select" id="role" name="role" required>
+                                {% for value, label in roles %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Выберите роль пользователя в системе</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success btn-admin me-2">
+                                <i class="bi bi-check-circle me-2"></i>
+                                ✅ Зарегистрировать пользователя
+                            </button>
+                            <a href="{% url 'admin_panel:users_list' %}" class="btn btn-outline-secondary btn-admin">
+                                <i class="bi bi-x-circle me-2"></i>
+                                ❌ Отмена
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Help Card -->
+        <div class="card admin-card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-question-circle me-2"></i>
+                    Справка по ролям пользователей
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <h6>🔐 Роли пользователей:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><span class="badge bg-danger me-2">Администратор</span> Полный доступ ко всем функциям</li>
+                            <li class="mb-2"><span class="badge bg-primary me-2">Главный инженер</span> Управление прорабами и ценами</li>
+                            <li class="mb-2"><span class="badge bg-info me-2">Прораб</span> Управление задачами проекта</li>
+                        </ul>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <h6>📋 Остальные роли:</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><span class="badge bg-warning me-2">Кладовщик</span> Управление складом</li>
+                            <li class="mb-2"><span class="badge bg-secondary me-2">Снабженец</span> Управление товарами</li>
+                            <li class="mb-2"><span class="badge bg-success me-2">Подрядчик</span> Ограниченный доступ</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

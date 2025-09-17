@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+{% load attachment_filters %}
+
+{% block title %}{{ expense_item.title }} - SuperPan{% endblock %}
+
+{% block extra_css %}
+<style>
+    .expense-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #1e3d72 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .expense-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-right: 10px;
+    }
+
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-in_review { background-color: #cce5ff; color: #004085; }
+    .status-approved { background-color: #d4edda; color: #155724; }
+    .status-rejected { background-color: #f8d7da; color: #721c24; }
+    .status-paid { background-color: #e2e3e5; color: #383d41; }
+
+    .priority-high { background-color: #ffebee; color: #c62828; }
+    .priority-medium { background-color: #fff3e0; color: #ef6c00; }
+    .priority-low { background-color: #e8f5e8; color: #2e7d32; }
+
+    .expense-amount {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0;
+    }
+
+    .expense-meta {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .comment-card {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid var(--primary-color);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .comment-internal {
+        border-left-color: #ffc107;
+        background-color: #fff8e1;
+    }
+
+    .document-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .document-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transform: translateY(-1px);
+    }
+
+    .history-item {
+        border-left: 3px solid #dee2e6;
+        padding-left: 15px;
+        margin-bottom: 15px;
+    }
+
+    .history-item.action-created { border-left-color: #28a745; }
+    .history-item.action-updated { border-left-color: #ffc107; }
+    .history-item.action-moved { border-left-color: #007bff; }
+    .history-item.action-approved { border-left-color: #28a745; }
+    .history-item.action-rejected { border-left-color: #dc3545; }
+    
+    .attachments-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .attachment-item {
+        position: relative;
+    }
+    
+    .attachment-photo {
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    .attachment-photo:hover {
+        transform: scale(1.05);
+        border-color: rgba(255,255,255,0.6);
+    }
+    
+    .photo-info {
+        text-align: center;
+    }
+    
+    .document-attachment .btn {
+        border-radius: 20px;
+        padding: 8px 16px;
+    }
+    
+    .image-modal .modal-dialog {
+        max-width: 90vw;
+        max-height: 90vh;
+    }
+    
+    .image-modal .modal-body {
+        text-align: center;
+        padding: 0;
+    }
+    
+    .image-modal img {
+        max-width: 100%;
+        max-height: 80vh;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:dashboard' %}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' expense_item.project.pk %}">{{ expense_item.project.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'kanban:board' expense_item.project.pk %}">Канбан-доска</a></li>
+                <li class="breadcrumb-item active">{{ expense_item.title }}</li>
+            </ol>
+        </nav>
+        <h1 class="h2 mb-0">Детали расхода</h1>
+    </div>
+    <div>
+        {% if can_edit %}
+        <a href="{% url 'kanban:expense_edit' expense_item.pk %}" class="btn btn-primary me-2">
+            <i class="bi bi-pencil me-2"></i>Редактировать
+        </a>
+        {% endif %}
+        <a href="{% url 'kanban:board' expense_item.project.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>К доске
+        </a>
+    </div>
+</div>
+
+<!-- Expense Header -->
+<div class="expense-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="h3 mb-3">{{ expense_item.title }}</h1>
+            <div class="mb-3">
+                <span class="expense-badge status-{{ expense_item.status }}">
+                    {{ expense_item.get_status_display }}
+                </span>
+                <span class="expense-badge priority-{{ expense_item.priority }}">
+                    {{ expense_item.get_priority_display }}
+                </span>
+                <span class="expense-badge" style="background-color: rgba(255,255,255,0.2); color: white;">
+                    {{ expense_item.get_task_type_display }}
+                </span>
+            </div>
+            {% if expense_item.description %}
+            <p class="mb-0 opacity-75">{{ expense_item.description|linebreaksbr }}</p>
+            {% endif %}
+            
+            <!-- Attachments Display -->
+            {% if expense_item.description and "Вложения:" in expense_item.description %}
+            <div class="mt-3">
+                <h6 class="text-white-50 mb-2">📎 Вложения:</h6>
+                <div class="attachments-container">
+                    {% for attachment in expense_item.description|extract_attachments %}
+                        <div class="attachment-item mb-2">
+                            {% if attachment.type == 'photo' %}
+                                <!-- Photo Display -->
+                                <div class="photo-attachment">
+                                    <img src="/media/expense_photos/{{ attachment.filename }}" 
+                                         alt="{{ attachment.filename }}" 
+                                         class="img-thumbnail attachment-photo"
+                                         style="max-width: 200px; max-height: 200px; cursor: pointer;"
+                                         onclick="openImageModal('/media/expense_photos/{{ attachment.filename }}')">
+                                    <div class="photo-info mt-1">
+                                        <small class="text-white-50">{{ attachment.filename }}</small>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <!-- Document Display -->
+                                <div class="document-attachment">
+                                    <a href="/media/expense_photos/{{ attachment.filename }}" 
+                                       target="_blank" 
+                                       class="btn btn-sm btn-outline-light">
+                                        <i class="bi bi-file-earmark me-1"></i>{{ attachment.filename }}
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="expense-amount">{{ expense_item.amount|floatformat:0 }} ₽</div>
+            <div class="opacity-75">Сумма расхода</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Expense Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Информация о расходе</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Проект:</strong><br>
+                        <a href="{% url 'projects:detail' expense_item.project.pk %}">{{ expense_item.project.name }}</a>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Создал:</strong><br>
+                        {{ expense_item.created_by.get_full_name }}
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Дата создания:</strong><br>
+                        {{ expense_item.created_at|date:"d.m.Y H:i" }}
+                    </div>
+                    {% if expense_item.due_date %}
+                    <div class="col-md-6">
+                        <strong>Срок выполнения:</strong><br>
+                        {{ expense_item.due_date|date:"d.m.Y" }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% if expense_item.category %}
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Категория:</strong><br>
+                        <span style="color: {{ expense_item.category.color }};">
+                            <i class="bi bi-circle-fill me-1"></i>{{ expense_item.category.name }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+                {% if expense_item.approved_by %}
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Одобрил:</strong><br>
+                        {{ expense_item.approved_by.get_full_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Дата одобрения:</strong><br>
+                        {{ expense_item.approved_at|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+                {% endif %}
+                {% if expense_item.rejection_reason %}
+                <hr>
+                <div class="alert alert-danger">
+                    <strong>Причина отклонения:</strong><br>
+                    {{ expense_item.rejection_reason }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Comments -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Комментарии</h5>
+            </div>
+            <div class="card-body">
+                {% for comment in comments %}
+                <div class="comment-card {% if comment.is_internal %}comment-internal{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <strong>{{ comment.author.get_full_name }}</strong>
+                        <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+                    </div>
+                    <p class="mb-0">{{ comment.text|linebreaksbr }}</p>
+                    {% if comment.is_internal %}
+                    <small class="text-warning"><i class="bi bi-lock me-1"></i>Внутренний комментарий</small>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-chat" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">Нет комментариев</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Documents -->
+        {% if documents %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-paperclip me-2"></i>Документы</h5>
+            </div>
+            <div class="card-body">
+                {% for document in documents %}
+                <div class="document-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">{{ document.name }}</h6>
+                            <small class="text-muted">
+                                {{ document.get_file_type_display }} • 
+                                Загрузил {{ document.uploaded_by.get_full_name }} • 
+                                {{ document.uploaded_at|date:"d.m.Y H:i" }}
+                            </small>
+                        </div>
+                        <a href="{{ document.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <!-- History -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>История изменений</h5>
+            </div>
+            <div class="card-body">
+                {% for history_item in history %}
+                <div class="history-item action-{{ history_item.action }}">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <strong class="small">{{ history_item.user.get_full_name }}</strong>
+                        <small class="text-muted">{{ history_item.created_at|date:"d.m H:i" }}</small>
+                    </div>
+                    <p class="small mb-0">{{ history_item.new_value }}</p>
+                    {% if history_item.old_value %}
+                    <small class="text-muted">Было: {{ history_item.old_value }}</small>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-3 text-muted">
+                    <i class="bi bi-clock" style="font-size: 1.5rem;"></i>
+                    <p class="mt-2 mb-0 small">Нет истории</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Image Modal -->
+<div class="modal fade image-modal" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-image me-2"></i>Просмотр изображения
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <img id="modalImage" src="" alt="Изображение">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <a id="downloadImage" href="" class="btn btn-primary" download>
+                    <i class="bi bi-download me-2"></i>Скачать
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация страницы
+});
+
+
+
+function openImageModal(imageSrc) {
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    const modalImage = document.getElementById('modalImage');
+    const downloadLink = document.getElementById('downloadImage');
+    
+    modalImage.src = imageSrc;
+    downloadLink.href = imageSrc;
+    modal.show();
+}
+</script>
+{% endblock %}

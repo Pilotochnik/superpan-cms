@@ -1,0 +1,192 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block page_title %}Управление проектами{% endblock %}
+{% block page_subtitle %}Просмотр и управление всеми проектами системы{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb breadcrumb-admin">
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Главная</a></li>
+        <li class="breadcrumb-item active">Проекты</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-number">{{ projects.count }}</div>
+            <div class="stat-label">
+                <i class="bi bi-folder me-1"></i>
+                Всего проектов
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card stat-card-success">
+            <div class="stat-number">{{ total_budget|floatformat:0 }}₽</div>
+            <div class="stat-label">
+                <i class="bi bi-wallet2 me-1"></i>
+                Общий бюджет
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-number">{{ total_spent|floatformat:0 }}₽</div>
+            <div class="stat-label">
+                <i class="bi bi-graph-down-arrow me-1"></i>
+                Потрачено
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Projects Table -->
+<div class="card admin-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-folder me-2"></i>
+            Список проектов
+        </h5>
+        <a href="{% url 'projects:create' %}" class="btn btn-success btn-admin">
+            <i class="bi bi-plus me-2"></i>Создать проект
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-admin mb-0">
+                <thead>
+                    <tr>
+                        <th>Проект</th>
+                        <th>Прораб</th>
+                        <th>Бюджет</th>
+                        <th>Потрачено</th>
+                        <th>Статус</th>
+                        <th>Команда</th>
+                        <th>Расходы</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                    <tr>
+                        <td>
+                            <div>
+                                <div class="fw-bold">{{ project.name }}</div>
+                                <small class="text-muted">{{ project.address|default:"—" }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if project.foreman %}
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar me-2" style="width: 30px; height: 30px; background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem;">
+                                        {{ project.foreman.first_name.0|default:project.foreman.email.0|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="small fw-bold">{{ project.foreman.get_full_name }}</div>
+                                        <small class="text-muted">{{ project.foreman.email }}</small>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ project.budget|floatformat:0 }}₽</strong>
+                        </td>
+                        <td>
+                            <span class="{% if project.spent_amount > project.budget %}text-danger{% else %}text-warning{% endif %}">
+                                {{ project.spent_amount|floatformat:0 }}₽
+                            </span>
+                        </td>
+                        <td>
+                            {% if project.status == 'active' %}
+                                <span class="badge bg-success">Активен</span>
+                            {% elif project.status == 'completed' %}
+                                <span class="badge bg-primary">Завершен</span>
+                            {% elif project.status == 'on_hold' %}
+                                <span class="badge bg-warning">Приостановлен</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ project.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ project.team_size }} чел.</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ project.expenses_count }}</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'projects:detail' project.pk %}" 
+                                   class="btn btn-sm btn-outline-primary" title="Просмотр">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'kanban:board' project.pk %}" 
+                                   class="btn btn-sm btn-outline-info" title="Канбан">
+                                    <i class="bi bi-kanban"></i>
+                                </a>
+                                <a href="{% url 'admin_panel:project_access_keys' project.pk %}" 
+                                   class="btn btn-sm btn-outline-warning" title="Ключи доступа">
+                                    <i class="bi bi-key"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-folder" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">Проекты не найдены</p>
+                            <a href="{% url 'projects:create' %}" class="btn btn-primary btn-admin mt-2">
+                                <i class="bi bi-plus me-2"></i>Создать первый проект
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Help Card -->
+<div class="card admin-card mt-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="bi bi-info-circle me-2"></i>
+            Справка по управлению проектами
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6>Статусы проектов:</h6>
+                <ul class="list-unstyled">
+                    <li><span class="badge bg-success me-2">Активен</span> Проект в работе</li>
+                    <li><span class="badge bg-primary me-2">Завершен</span> Проект завершен</li>
+                    <li><span class="badge bg-warning me-2">Приостановлен</span> Временно остановлен</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6>Действия:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-eye me-2"></i> Просмотр деталей проекта</li>
+                    <li><i class="bi bi-kanban me-2"></i> Открыть канбан-доску</li>
+                    <li><i class="bi bi-key me-2"></i> Управление доступом</li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h6>Информация:</h6>
+                <p class="small text-muted">
+                    Здесь отображаются все проекты системы с основной информацией: 
+                    бюджет, потраченные средства, количество участников команды и расходов.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

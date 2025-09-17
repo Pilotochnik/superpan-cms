@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Список проектов - SuperPan{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">Проекты</h1>
+        <p class="text-muted">Управление строительными проектами</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if user.can_create_projects %}
+        <a href="{% url 'projects:create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Создать проект
+        </a>
+        {% endif %}
+        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#accessKeyModal">
+            <i class="bi bi-key me-2"></i>Ввести ключ доступа
+        </button>
+    </div>
+</div>
+
+<!-- Поиск и фильтры -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" 
+                   placeholder="Поиск проектов..." value="{{ search_query }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+            {% endif %}
+            <select name="status" class="form-select me-2" onchange="this.form.submit()">
+                <option value="">Все статусы</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+<!-- Список проектов -->
+{% if projects %}
+    <div class="row">
+        {% for project in projects %}
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="card h-100 enhanced-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-building me-2 text-primary"></i>
+                            {{ project.name }}
+                        </h5>
+                        <span class="badge 
+                            {% if project.status == 'planning' %}bg-secondary
+                            {% elif project.status == 'in_progress' %}bg-primary
+                            {% elif project.status == 'completed' %}bg-success
+                            {% elif project.status == 'on_hold' %}bg-warning
+                            {% else %}bg-danger{% endif %}">
+                            {{ project.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    {% if project.description %}
+                    <p class="card-text text-muted small mb-3">
+                        {{ project.description|truncatechars:100 }}
+                    </p>
+                    {% endif %}
+                    
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="small text-muted">Бюджет</div>
+                            <div class="fw-bold">{{ project.budget|floatformat:0 }}₽</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Потрачено</div>
+                            <div class="fw-bold text-danger">{{ project.spent_amount|floatformat:0 }}₽</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Остаток</div>
+                            <div class="fw-bold text-success">{{ project.remaining_budget|floatformat:0 }}₽</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Прогресс бюджета -->
+                    <div class="progress mb-3" style="height: 6px;">
+                        <div class="progress-bar 
+                            {% if project.budget_utilization_percent > 90 %}bg-danger
+                            {% elif project.budget_utilization_percent > 75 %}bg-warning
+                            {% else %}bg-success{% endif %}" 
+                             style="width: {{ project.budget_utilization_percent }}%"></div>
+                    </div>
+                    <small class="text-muted">Использовано {{ project.budget_utilization_percent|floatformat:1 }}%</small>
+                    
+                    <!-- Информация о команде -->
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted">
+                                <i class="bi bi-person-badge me-1"></i>
+                                {% if project.foreman %}
+                                    {{ project.foreman.get_full_name }}
+                                {% else %}
+                                    Прораб не назначен
+                                {% endif %}
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-people me-1"></i>
+                                {{ project.get_team_members.count }} участников
+                            </small>
+                        </div>
+                        
+                        {% if project.address %}
+                        <small class="text-muted">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            {{ project.address|truncatechars:50 }}
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'projects:detail' project.pk %}" class="btn btn-outline-primary btn-sm flex-fill">
+                            <i class="bi bi-eye me-1"></i>Просмотр
+                        </a>
+                        <a href="{% url 'kanban:board' project.pk %}" class="btn btn-outline-success btn-sm flex-fill">
+                            <i class="bi bi-kanban me-1"></i>Канбан
+                        </a>
+                        {% if user.can_manage_projects and user == project.created_by or user == project.foreman %}
+                        <a href="{% url 'projects:edit' project.pk %}" class="btn btn-outline-warning btn-sm">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация -->
+    {% if is_paginated %}
+    <nav aria-label="Пагинация проектов">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        Первая
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        Предыдущая
+                    </a>
+                </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        Следующая
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        Последняя
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-folder-x" style="font-size: 4rem; color: #dee2e6;"></i>
+        <h3 class="mt-3 text-muted">Проекты не найдены</h3>
+        {% if search_query or status_filter %}
+            <p class="text-muted">Попробуйте изменить параметры поиска или фильтры.</p>
+            <a href="{% url 'projects:list' %}" class="btn btn-outline-primary">
+                Сбросить фильтры
+            </a>
+        {% else %}
+            <p class="text-muted">У вас пока нет доступных проектов.</p>
+            <div class="d-flex justify-content-center gap-3 mt-3">
+                {% if user.can_create_projects %}
+                <a href="{% url 'projects:create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Создать первый проект
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#accessKeyModal">
+                    <i class="bi bi-key me-2"></i>Ввести ключ доступа
+                </button>
+            </div>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- Модальное окно для ввода ключа доступа -->
+<div class="modal fade" id="accessKeyModal" tabindex="-1" aria-labelledby="accessKeyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="accessKeyModalLabel">
+                    <i class="bi bi-key me-2"></i>Ввод ключа доступа к проекту
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'accounts:use_access_key' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Инструкция:</strong> Введите ключ доступа к проекту, который вы получили от администратора.
+                    </div>
+                    <div class="mb-3">
+                        <label for="access_key" class="form-label">Ключ доступа</label>
+                        <input type="text" class="form-control" id="access_key" name="access_key" 
+                               placeholder="Введите ключ доступа..." required>
+                        <div class="form-text">Ключ должен быть в формате UUID (например: 123e4567-e89b-12d3-a456-426614174000)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-2"></i>Получить доступ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

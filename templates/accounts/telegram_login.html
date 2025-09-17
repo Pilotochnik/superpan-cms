@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход через Telegram</title>
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    /* Анимированный фон с инструментами */
+    .construction-tools {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    .tool {
+        position: absolute;
+        opacity: 0.1;
+        animation: float 15s infinite linear;
+        font-size: 2rem;
+    }
+    
+    .tool:nth-child(1) { left: -50px; animation-delay: 0s; animation-duration: 20s; }
+    .tool:nth-child(2) { left: -50px; animation-delay: 3s; animation-duration: 18s; }
+    .tool:nth-child(3) { left: -50px; animation-delay: 6s; animation-duration: 22s; }
+    .tool:nth-child(4) { left: -50px; animation-delay: 9s; animation-duration: 16s; }
+    .tool:nth-child(5) { left: -50px; animation-delay: 12s; animation-duration: 19s; }
+    .tool:nth-child(6) { left: -50px; animation-delay: 15s; animation-duration: 21s; }
+    .tool:nth-child(7) { left: -50px; animation-delay: 18s; animation-duration: 17s; }
+    .tool:nth-child(8) { left: -50px; animation-delay: 21s; animation-duration: 23s; }
+    
+    .tool-right {
+        position: absolute;
+        opacity: 0.1;
+        animation: floatRight 15s infinite linear;
+        font-size: 2rem;
+    }
+    
+    .tool-right:nth-child(1) { right: -50px; animation-delay: 2s; animation-duration: 19s; }
+    .tool-right:nth-child(2) { right: -50px; animation-delay: 5s; animation-duration: 17s; }
+    .tool-right:nth-child(3) { right: -50px; animation-delay: 8s; animation-duration: 21s; }
+    .tool-right:nth-child(4) { right: -50px; animation-delay: 11s; animation-duration: 15s; }
+    .tool-right:nth-child(5) { right: -50px; animation-delay: 14s; animation-duration: 18s; }
+    .tool-right:nth-child(6) { right: -50px; animation-delay: 17s; animation-duration: 20s; }
+    .tool-right:nth-child(7) { right: -50px; animation-delay: 20s; animation-duration: 16s; }
+    .tool-right:nth-child(8) { right: -50px; animation-delay: 23s; animation-duration: 22s; }
+    
+    @keyframes float {
+        0% {
+            transform: translateX(-100px) translateY(100vh) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.1;
+        }
+        90% {
+            opacity: 0.1;
+        }
+        100% {
+            transform: translateX(100vw) translateY(-100px) rotate(360deg);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes floatRight {
+        0% {
+            transform: translateX(100px) translateY(100vh) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.1;
+        }
+        90% {
+            opacity: 0.1;
+        }
+        100% {
+            transform: translateX(-100vw) translateY(-100px) rotate(-360deg);
+            opacity: 0;
+        }
+    }
+    
+    .login-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        border-radius: 25px;
+        padding: 60px 50px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        width: 550px;
+        height: 550px;
+        margin: 20px;
+        position: relative;
+        z-index: 10;
+        animation: slideIn 0.8s ease-out;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    @keyframes slideIn {
+        0% {
+            transform: translateY(50px) scale(0.9);
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+    }
+    
+    .title {
+        color: #2c3e50;
+        font-size: 2.8rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: titleGlow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes titleGlow {
+        0% {
+            text-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+        100% {
+            text-shadow: 0 0 30px rgba(118, 75, 162, 0.4);
+        }
+    }
+    
+    .subtitle {
+        color: #7f8c8d;
+        font-size: 1rem;
+        margin-bottom: 25px;
+        line-height: 1.4;
+        animation: fadeInUp 0.8s ease-out 0.3s both;
+    }
+    
+    @keyframes fadeInUp {
+        0% {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    
+    .login-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 18px 50px;
+        font-size: 1.4rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 15px;
+        text-decoration: none;
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        animation: fadeInUp 0.8s ease-out 0.7s both;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .telegram-icon {
+        font-size: 1.6rem;
+        animation: planeFly 2s ease-in-out infinite;
+    }
+    
+    @keyframes planeFly {
+        0%, 100% {
+            transform: translateX(0) rotate(0deg);
+        }
+        25% {
+            transform: translateX(5px) rotate(5deg);
+        }
+        50% {
+            transform: translateX(0) rotate(0deg);
+        }
+        75% {
+            transform: translateX(-3px) rotate(-3deg);
+        }
+    }
+    
+    .login-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        text-decoration: none;
+        color: white;
+    }
+    
+    .login-btn:active {
+        transform: translateY(-1px);
+    }
+    
+    .login-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .login-btn:hover::before {
+        left: 100%;
+    }
+    
+    .instructions {
+        margin-top: 25px;
+        text-align: left;
+        animation: fadeInUp 0.8s ease-out 0.9s both;
+    }
+    
+    .instructions h4 {
+        color: #2c3e50;
+        font-size: 1rem;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .instruction-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .instruction-list li {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        padding-left: 25px;
+        position: relative;
+        line-height: 1.4;
+        animation: slideInLeft 0.6s ease-out both;
+    }
+    
+    .instruction-list li:nth-child(1) { animation-delay: 1.1s; }
+    .instruction-list li:nth-child(2) { animation-delay: 1.3s; }
+    .instruction-list li:nth-child(3) { animation-delay: 1.5s; }
+    .instruction-list li:nth-child(4) { animation-delay: 1.7s; }
+    
+    @keyframes slideInLeft {
+        0% {
+            transform: translateX(-30px);
+            opacity: 0;
+        }
+        100% {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .instruction-list li::before {
+        content: counter(step-counter);
+        counter-increment: step-counter;
+        position: absolute;
+        left: 0;
+        top: 0;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .instruction-list {
+        counter-reset: step-counter;
+    }
+    
+    .error-message {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-weight: 500;
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .login-container {
+            width: 500px;
+            height: 500px;
+            padding: 40px 35px;
+            margin: 15px;
+        }
+        
+        .title {
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+        }
+        
+        .login-btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+        }
+        
+        .tool, .tool-right {
+            font-size: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .login-container {
+            width: 400px;
+            height: 400px;
+            padding: 30px 25px;
+        }
+        
+        .title {
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+        }
+        
+        .login-btn {
+            padding: 12px 35px;
+            font-size: 1.1rem;
+        }
+        
+        .instructions h4 {
+            font-size: 0.9rem;
+        }
+        
+        .instruction-list li {
+            font-size: 0.8rem;
+        }
+        
+        .tool, .tool-right {
+            font-size: 1.2rem;
+        }
+    }
+</style>
+
+<!-- Анимированные строительные инструменты -->
+<div class="construction-tools">
+    <!-- Инструменты слева направо -->
+    <div class="tool">🔨</div>
+    <div class="tool">⚒️</div>
+    <div class="tool">🔧</div>
+    <div class="tool">⚙️</div>
+    <div class="tool">🔩</div>
+    <div class="tool">📐</div>
+    <div class="tool">📏</div>
+    <div class="tool">🛠️</div>
+    
+    <!-- Инструменты справа налево -->
+    <div class="tool-right">🔨</div>
+    <div class="tool-right">⚒️</div>
+    <div class="tool-right">🔧</div>
+    <div class="tool-right">⚙️</div>
+    <div class="tool-right">🔩</div>
+    <div class="tool-right">📐</div>
+    <div class="tool-right">📏</div>
+    <div class="tool-right">🛠️</div>
+</div>
+
+<div class="login-container">
+    <h1 class="title">Добро пожаловать!</h1>
+    <p class="subtitle">Быстрая и безопасная авторизация через Telegram</p>
+    
+    {% if error_message %}
+    <div class="error-message">
+        {{ error_message }}
+    </div>
+    {% endif %}
+    
+    <a href="https://t.me/projectpanell_bot?start=login" class="login-btn">
+        <i class="bi bi-telegram telegram-icon">✈️</i>
+        Войти через Telegram
+    </a>
+    
+    <div class="instructions">
+        <h4>
+            <i class="bi bi-list-ol"></i>
+            Инструкция по входу:
+        </h4>
+        <ol class="instruction-list">
+            <li>Нажмите кнопку "Войти через Telegram"</li>
+            <li>Откроется Telegram с ботом</li>
+            <li>Отправьте команду /start боту</li>
+            <li>Вы автоматически войдете в систему</li>
+        </ol>
+    </div>
+</div>
+</body>
+</html>

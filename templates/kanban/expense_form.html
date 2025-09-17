@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - SuperPan{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:dashboard' %}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' expense_item.project.pk %}">{{ expense_item.project.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'kanban:board' expense_item.project.pk %}">Канбан-доска</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'kanban:expense_detail' expense_item.pk %}">{{ expense_item.title }}</a></li>
+                <li class="breadcrumb-item active">Редактирование</li>
+            </ol>
+        </nav>
+        <h1 class="h2 mb-0">{{ title }}</h1>
+    </div>
+    <div>
+        <a href="{% url 'kanban:expense_detail' expense_item.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Отмена
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil me-2"></i>Редактировать расход
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'kanban:expense_detail' expense_item.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x me-2"></i>Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check me-2"></i>Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Информация о расходе
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Текущий статус:</strong><br>
+                    <span class="badge bg-secondary">{{ expense_item.get_status_display }}</span>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Проект:</strong><br>
+                    {{ expense_item.project.name }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Создан:</strong><br>
+                    {{ expense_item.created_at|date:"d.m.Y H:i" }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Автор:</strong><br>
+                    {{ expense_item.created_by.get_full_name }}
+                </div>
+                
+                {% if expense_item.approved_by %}
+                <div class="mb-3">
+                    <strong>Одобрил:</strong><br>
+                    {{ expense_item.approved_by.get_full_name }}<br>
+                    <small class="text-muted">{{ expense_item.approved_at|date:"d.m.Y H:i" }}</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

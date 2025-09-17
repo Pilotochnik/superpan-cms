@@ -1,0 +1,234 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Улучшенная таблица */
+    #result_list {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-top: 20px;
+    }
+
+    #result_list thead th {
+        background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%);
+        color: white;
+        font-weight: 600;
+        padding: 15px 12px;
+        border: none;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    #result_list thead th a {
+        color: white;
+        text-decoration: none;
+    }
+
+    #result_list tbody tr {
+        transition: background-color 0.2s ease;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    #result_list tbody tr:hover {
+        background-color: rgba(44, 90, 160, 0.05);
+    }
+
+    #result_list tbody td {
+        padding: 12px;
+        vertical-align: middle;
+    }
+
+    /* Улучшенные фильтры */
+    #changelist-filter {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        padding: 20px;
+    }
+
+    #changelist-filter h2 {
+        color: #2c5aa0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f1f3f4;
+    }
+
+    #changelist-filter h3 {
+        color: #495057;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin: 15px 0 8px 0;
+    }
+
+    #changelist-filter ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #changelist-filter li {
+        margin-bottom: 5px;
+    }
+
+    #changelist-filter a {
+        display: block;
+        padding: 6px 12px;
+        color: #495057;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    #changelist-filter a:hover {
+        background-color: rgba(44, 90, 160, 0.1);
+        color: #2c5aa0;
+    }
+
+    #changelist-filter .selected {
+        background-color: #2c5aa0;
+        color: white;
+        font-weight: 500;
+    }
+
+    /* Улучшенный поиск */
+    #changelist-search {
+        margin-bottom: 20px;
+    }
+
+    #searchbar {
+        width: 300px;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    #searchbar:focus {
+        border-color: #2c5aa0;
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    }
+
+    .search-button {
+        background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%);
+        border: none;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 20px;
+        margin-left: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .search-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3);
+    }
+
+    /* Улучшенная пагинация */
+    .paginator {
+        text-align: center;
+        margin: 30px 0;
+    }
+
+    .paginator a, .paginator .this-page {
+        display: inline-block;
+        padding: 8px 12px;
+        margin: 0 2px;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .paginator a {
+        color: #2c5aa0;
+        border: 1px solid #e9ecef;
+    }
+
+    .paginator a:hover {
+        background-color: #2c5aa0;
+        color: white;
+        border-color: #2c5aa0;
+    }
+
+    .paginator .this-page {
+        background-color: #2c5aa0;
+        color: white;
+        border: 1px solid #2c5aa0;
+        font-weight: 600;
+    }
+
+    /* Действия с выбранными элементами */
+    .actions {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .actions select {
+        padding: 8px 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 6px;
+        background: white;
+    }
+
+    .actions button {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .actions button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+
+    /* Responsive улучшения */
+    @media (max-width: 768px) {
+        #changelist-filter {
+            margin-top: 20px;
+        }
+        
+        #searchbar {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .search-button {
+            margin-left: 0;
+            width: 100%;
+        }
+        
+        #result_list {
+            font-size: 0.9rem;
+        }
+        
+        #result_list td, #result_list th {
+            padding: 8px 6px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content_title %}
+<h1 style="color: #2c5aa0; font-size: 2rem; margin-bottom: 10px;">
+    <i class="fas fa-list"></i> {{ title }}
+</h1>
+<p style="color: #6c757d; margin-bottom: 20px;">Управление записями в системе SuperPan</p>
+{% endblock %}

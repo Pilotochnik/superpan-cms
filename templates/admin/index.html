@@ -1,0 +1,311 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_urls %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .dashboard-welcome {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #1e3d72 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .dashboard-welcome h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .dashboard-welcome p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-card .icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        color: var(--primary-color);
+    }
+
+    .stat-card .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+    }
+
+    .stat-card .label {
+        color: #6c757d;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .quick-actions {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+
+    .quick-actions h3 {
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+    }
+
+    .action-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        background: var(--primary-color);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+        background: #1e3d72;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3);
+        color: white;
+    }
+
+    .action-btn i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+    }
+
+    .module-enhanced {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .module-enhanced h2 {
+        background: var(--primary-color);
+        color: white;
+        padding: 20px;
+        margin: 0;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .module-enhanced h2 i {
+        margin-right: 12px;
+        font-size: 1.5rem;
+    }
+
+    .module-enhanced .module-content {
+        padding: 20px;
+    }
+
+    .app-description {
+        color: #6c757d;
+        margin-bottom: 15px;
+        font-style: italic;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-welcome">
+    <h1><i class="fas fa-building"></i> Добро пожаловать в SuperPan</h1>
+    <p>Система управления строительными проектами с высоким уровнем безопасности</p>
+</div>
+
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="icon"><i class="fas fa-users"></i></div>
+        <div class="number" id="users-count">{{ users_count|default:"0" }}</div>
+        <div class="label">Пользователей</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="icon"><i class="fas fa-project-diagram"></i></div>
+        <div class="number" id="projects-count">{{ projects_count|default:"0" }}</div>
+        <div class="label">Проектов</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="icon"><i class="fas fa-tasks"></i></div>
+        <div class="number" id="expenses-count">{{ expenses_count|default:"0" }}</div>
+        <div class="label">Расходов</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="icon"><i class="fas fa-shield-alt"></i></div>
+        <div class="number" id="sessions-count">{{ active_sessions|default:"0" }}</div>
+        <div class="label">Активных сессий</div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <h3><i class="fas fa-bolt"></i> Быстрые действия</h3>
+    <div class="action-buttons">
+        <a href="{% url 'admin:accounts_user_add' %}" class="action-btn">
+            <i class="fas fa-user-plus"></i>
+            Добавить пользователя
+        </a>
+        <a href="{% url 'admin:projects_project_add' %}" class="action-btn">
+            <i class="fas fa-plus-circle"></i>
+            Создать проект
+        </a>
+        <a href="{% url 'admin:kanban_expensecategory_add' %}" class="action-btn">
+            <i class="fas fa-tags"></i>
+            Добавить категорию
+        </a>
+        <a href="{% url 'admin:accounts_loginattempt_changelist' %}" class="action-btn">
+            <i class="fas fa-history"></i>
+            Журнал входов
+        </a>
+    </div>
+</div>
+
+{% if app_list %}
+    <div class="dashboard-grid">
+        {% for app in app_list %}
+            <div class="module-enhanced">
+                <h2>
+                    {% if app.app_label == 'accounts' %}
+                        <i class="fas fa-users"></i>
+                    {% elif app.app_label == 'projects' %}
+                        <i class="fas fa-project-diagram"></i>
+                    {% elif app.app_label == 'kanban' %}
+                        <i class="fas fa-tasks"></i>
+                    {% elif app.app_label == 'auth' %}
+                        <i class="fas fa-lock"></i>
+                    {% elif app.app_label == 'sites' %}
+                        <i class="fas fa-globe"></i>
+                    {% else %}
+                        <i class="fas fa-cog"></i>
+                    {% endif %}
+                    
+                    <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">
+                        {% if app.app_label == 'accounts' %}
+                            Управление аккаунтами
+                        {% elif app.app_label == 'projects' %}
+                            Управление проектами
+                        {% elif app.app_label == 'kanban' %}
+                            Канбан-доска расходов
+                        {% else %}
+                            {{ app.name }}
+                        {% endif %}
+                    </a>
+                </h2>
+                
+                <div class="module-content">
+                    {% if app.app_label == 'accounts' %}
+                        <div class="app-description">
+                            Управление пользователями, ролями, сессиями и ключами доступа к проектам
+                        </div>
+                    {% elif app.app_label == 'projects' %}
+                        <div class="app-description">
+                            Создание и управление строительными проектами, участниками и документами
+                        </div>
+                    {% elif app.app_label == 'kanban' %}
+                        <div class="app-description">
+                            Канбан-доски для управления расходами, категориями и комментариями
+                        </div>
+                    {% endif %}
+
+                    {% for model in app.models %}
+                        <div style="margin-bottom: 10px;">
+                            <strong>
+                                {% if model.object_name == 'User' %}
+                                    <i class="fas fa-user"></i>
+                                {% elif model.object_name == 'Project' %}
+                                    <i class="fas fa-building"></i>
+                                {% elif model.object_name == 'ExpenseItem' %}
+                                    <i class="fas fa-receipt"></i>
+                                {% elif model.object_name == 'ProjectAccessKey' %}
+                                    <i class="fas fa-key"></i>
+                                {% elif model.object_name == 'UserSession' %}
+                                    <i class="fas fa-clock"></i>
+                                {% else %}
+                                    <i class="fas fa-file"></i>
+                                {% endif %}
+                                {{ model.name }}
+                            </strong>
+                            
+                            <div style="margin-top: 5px;">
+                                {% if model.admin_url %}
+                                    <a href="{{ model.admin_url }}" class="changelink">Управление</a>
+                                {% endif %}
+                                {% if model.add_url %}
+                                    <a href="{{ model.add_url }}" class="addlink">Добавить</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>{% translate "You don't have permission to view or edit anything." %}</p>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Анимация счетчиков
+    function animateCounter(element, target) {
+        let current = 0;
+        const increment = target / 30;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(current);
+        }, 50);
+    }
+
+    // Запускаем анимацию для всех счетчиков
+    const counters = document.querySelectorAll('.stat-card .number');
+    counters.forEach(counter => {
+        const target = parseInt(counter.textContent);
+        if (target > 0) {
+            counter.textContent = '0';
+            animateCounter(counter, target);
+        }
+    });
+});
+</script>
+{% endblock %}

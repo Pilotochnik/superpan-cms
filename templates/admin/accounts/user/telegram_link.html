@@ -1,0 +1,104 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}Привязка Telegram{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:accounts_user_changelist' %}">Пользователи</a>
+&rsaquo; <a href="{% url 'admin:accounts_user_change' user.id %}">{{ user.get_full_name }}</a>
+&rsaquo; Привязка Telegram
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="module aligned">
+    <h1>📱 Привязка Telegram к пользователю</h1>
+    
+    <div class="description">
+        <p><strong>Пользователь:</strong> {{ user.get_full_name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Роль:</strong> {{ user.get_role_display }}</p>
+    </div>
+    
+    <form method="post" class="form-horizontal">
+        {% csrf_token %}
+        
+        <fieldset class="module aligned">
+            <h2>📋 Данные Telegram</h2>
+            
+            <div class="form-row">
+                <div class="field-box">
+                    <label for="telegram_id" class="required">Telegram ID:</label>
+                    <input type="number" name="telegram_id" id="telegram_id" required 
+                           placeholder="123456789" style="width: 200px;">
+                    <p class="help">Уникальный ID пользователя в Telegram (можно получить через @userinfobot)</p>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="field-box">
+                    <label for="username">Username в Telegram:</label>
+                    <input type="text" name="username" id="username" 
+                           placeholder="@username" style="width: 200px;">
+                    <p class="help">Необязательно, если есть</p>
+                </div>
+            </div>
+        </fieldset>
+        
+        <div class="submit-row">
+            <input type="submit" value="✅ Привязать Telegram" class="default" name="_save">
+            <a href="{% url 'admin:accounts_user_change' user.id %}" class="button cancel-link">❌ Отмена</a>
+        </div>
+    </form>
+    
+    <div class="help-text" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #007cba;">
+        <h3>📝 Инструкция:</h3>
+        <ol>
+            <li>Попросите пользователя написать боту @userinfobot в Telegram</li>
+            <li>Скопируйте его Telegram ID (число)</li>
+            <li>Введите ID в поле выше</li>
+            <li>Нажмите "Привязать Telegram"</li>
+        </ol>
+        
+        <p><strong>После привязки пользователь сможет:</strong></p>
+        <ul>
+            <li>Войти в систему через Telegram бота</li>
+            <li>Управлять проектами согласно своей роли</li>
+            <li>Получать уведомления в Telegram</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.field-box {
+    margin-bottom: 15px;
+}
+
+.field-box label {
+    display: inline-block;
+    width: 150px;
+    font-weight: bold;
+}
+
+.field-box input {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.help-text h3 {
+    color: #007cba;
+    margin-top: 0;
+}
+
+.help-text ul, .help-text ol {
+    margin-left: 20px;
+}
+
+.help-text li {
+    margin-bottom: 5px;
+}
+</style>
+{% endblock %}

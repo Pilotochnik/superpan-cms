@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: superpan
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py migrate && python manage.py init_production && gunicorn superpan.wsgi
+    envVars:
+      - key: DEBUG
+        value: False
+      - key: SECRET_KEY
+        value: django-insecure-superpan-production-key-2024
+      - key: ALLOWED_HOSTS
+        value: *.onrender.com,localhost,127.0.0.1

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Активность - {{ user.get_full_name }} - SuperPan{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-0">Моя активность</h1>
+        <p class="text-muted">История входов и действий в системе</p>
+    </div>
+    <div>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>К профилю
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Logins -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Последние входы
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for login in recent_logins %}
+                <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
+                    <div>
+                        <div class="d-flex align-items-center mb-1">
+                            {% if login.success %}
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong class="text-success">Успешный вход</strong>
+                            {% else %}
+                                <i class="bi bi-x-circle text-danger me-2"></i>
+                                <strong class="text-danger">Неудачная попытка</strong>
+                            {% endif %}
+                        </div>
+                        <div class="small text-muted">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            IP: {{ login.ip_address }}
+                        </div>
+                        {% if not login.success and login.failure_reason %}
+                        <div class="small text-danger">
+                            {% if login.failure_reason == 'device_not_allowed' %}
+                                Устройство не разрешено
+                            {% elif login.failure_reason == 'invalid_credentials' %}
+                                Неверные данные
+                            {% else %}
+                                {{ login.failure_reason }}
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        <div class="small">{{ login.created_at|date:"d.m.Y" }}</div>
+                        <div class="small text-muted">{{ login.created_at|date:"H:i" }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-shield" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">Нет истории входов</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Sessions -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-device-hdd me-2"></i>
+                    Активные сессии
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for session in active_sessions %}
+                <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
+                    <div>
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-laptop text-primary me-2"></i>
+                            <strong>Текущее устройство</strong>
+                        </div>
+                        <div class="small text-muted">
+                            IP: {{ session.ip_address }}
+                        </div>
+                        <div class="small text-muted">
+                            Создана: {{ session.created_at|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="small">{{ session.last_activity|date:"d.m.Y" }}</div>
+                        <div class="small text-muted">{{ session.last_activity|date:"H:i" }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-device-hdd" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">Нет активных сессий</p>
+                </div>
+                {% endfor %}
+                
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Безопасность устройства
+                    </h6>
+                    <p class="mb-0 small">
+                        Ваш аккаунт привязан к одному устройству. Если вам нужно войти с другого устройства, 
+                        обратитесь к администратору для сброса привязки.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-activity me-2"></i>
+            Последние действия в проектах
+        </h5>
+    </div>
+    <div class="card-body">
+        {% for activity in recent_activities %}
+        <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center mb-1">
+                    {% if activity.activity_type == 'project_created' %}
+                        <i class="bi bi-folder-plus text-success me-2"></i>
+                    {% elif activity.activity_type == 'expense_added' %}
+                        <i class="bi bi-plus-circle text-primary me-2"></i>
+                    {% elif activity.activity_type == 'expense_approved' %}
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                    {% elif activity.activity_type == 'expense_rejected' %}
+                        <i class="bi bi-x-circle text-danger me-2"></i>
+                    {% else %}
+                        <i class="bi bi-activity text-info me-2"></i>
+                    {% endif %}
+                    <strong>{{ activity.description }}</strong>
+                </div>
+                <div class="small text-muted">
+                    <i class="bi bi-folder me-1"></i>
+                    <a href="{% url 'projects:detail' activity.project.pk %}" class="text-decoration-none">
+                        {{ activity.project.name }}
+                    </a>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="small">{{ activity.created_at|date:"d.m.Y" }}</div>
+                <div class="small text-muted">{{ activity.created_at|date:"H:i" }}</div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-activity" style="font-size: 2rem;"></i>
+            <p class="mt-2 mb-0">Нет активности в проектах</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

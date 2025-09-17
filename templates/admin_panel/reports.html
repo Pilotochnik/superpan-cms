@@ -1,0 +1,271 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block page_title %}Отчеты и аналитика{% endblock %}
+{% block page_subtitle %}Детальная аналитика по системе{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb breadcrumb-admin">
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Главная</a></li>
+        <li class="breadcrumb-item active">Отчеты</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Activity Report -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-activity me-2"></i>
+                    Активность за последний месяц
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for activity in monthly_activity %}
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center">
+                            <div class="stat-number text-primary">{{ activity.count }}</div>
+                            <div class="stat-label">
+                                {% if activity.activity_type == 'project_created' %}
+                                    <i class="bi bi-folder-plus me-1"></i>Создано проектов
+                                {% elif activity.activity_type == 'expense_added' %}
+                                    <i class="bi bi-plus-circle me-1"></i>Добавлено расходов
+                                {% elif activity.activity_type == 'expense_approved' %}
+                                    <i class="bi bi-check-circle me-1"></i>Одобрено расходов
+                                {% elif activity.activity_type == 'expense_rejected' %}
+                                    <i class="bi bi-x-circle me-1"></i>Отклонено расходов
+                                {% else %}
+                                    <i class="bi bi-activity me-1"></i>{{ activity.activity_type }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-4 text-muted">
+                        <i class="bi bi-activity" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">Нет активности за последний месяц</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Projects Report -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-folder me-2"></i>
+                    Отчет по проектам
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-admin mb-0">
+                        <thead>
+                            <tr>
+                                <th>Проект</th>
+                                <th>Всего расходов</th>
+                                <th>Одобрено</th>
+                                <th>Сумма расходов</th>
+                                <th>Одобренная сумма</th>
+                                <th>Эффективность</th>
+                                <th>Дата создания</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects_report %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <div class="fw-bold">{{ project.name }}</div>
+                                        <small class="text-muted">{{ project.address|default:"—" }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ project.expenses_count|default:0 }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ project.approved_expenses|default:0 }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ project.total_expenses_amount|default:0|floatformat:0 }}₽</strong>
+                                </td>
+                                <td>
+                                    <strong class="text-success">{{ project.approved_expenses_amount|default:0|floatformat:0 }}₽</strong>
+                                </td>
+                                <td>
+                                    {% if project.expenses_count > 0 %}
+                                        {% widthratio project.approved_expenses project.expenses_count 100 as efficiency %}
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar 
+                                                {% if efficiency > 80 %}bg-success
+                                                {% elif efficiency > 50 %}bg-warning
+                                                {% else %}bg-danger
+                                                {% endif %}" 
+                                                 style="width: {{ efficiency }}%">
+                                                {{ efficiency }}%
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ project.created_at|date:"d.m.Y" }}</small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-folder" style="font-size: 2rem;"></i>
+                                    <p class="mt-2 mb-0">Проекты не найдены</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Report -->
+<div class="row">
+    <div class="col-12">
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    Отчет по пользователям
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-admin mb-0">
+                        <thead>
+                            <tr>
+                                <th>Пользователь</th>
+                                <th>Роль</th>
+                                <th>Создано проектов</th>
+                                <th>Добавлено расходов</th>
+                                <th>Общая сумма расходов</th>
+                                <th>Дата регистрации</th>
+                                <th>Активность</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user_obj in users_report %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar me-2" style="width: 35px; height: 35px; background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem;">
+                                            {{ user_obj.first_name.0|default:user_obj.email.0|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ user_obj.get_full_name }}</div>
+                                            <small class="text-muted">{{ user_obj.email }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-role badge-{{ user_obj.role }}">
+                                        {{ user_obj.get_role_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ user_obj.projects_count|default:0 }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ user_obj.expenses_count|default:0 }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ user_obj.total_expenses_amount|default:0|floatformat:0 }}₽</strong>
+                                </td>
+                                <td>
+                                    <small>{{ user_obj.created_at|date:"d.m.Y" }}</small>
+                                </td>
+                                <td>
+                                    {% if user_obj.projects_count > 0 or user_obj.expenses_count > 0 %}
+                                        <span class="badge bg-success">Активен</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Неактивен</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-people" style="font-size: 2rem;"></i>
+                                    <p class="mt-2 mb-0">Активные пользователи не найдены</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="card admin-card mt-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="bi bi-download me-2"></i>
+            Экспорт данных
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="text-muted">Экспорт отчетов в различных форматах:</p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'admin_panel:export_excel' %}" class="btn btn-success btn-admin">
+                        <i class="bi bi-file-earmark-excel me-2"></i>Excel
+                    </a>
+                    <a href="{% url 'admin_panel:export_pdf' %}" class="btn btn-danger btn-admin">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>PDF
+                    </a>
+                    <a href="{% url 'admin_panel:export_csv' %}" class="btn btn-info btn-admin">
+                        <i class="bi bi-file-earmark-text me-2"></i>CSV
+                    </a>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Включает данные по проектам, расходам и пользователям
+                </small>
+            </div>
+            <div class="col-md-6">
+                <h6>Доступные отчеты:</h6>
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-check me-2 text-success"></i>Отчет по проектам</li>
+                    <li><i class="bi bi-check me-2 text-success"></i>Отчет по пользователям</li>
+                    <li><i class="bi bi-check me-2 text-success"></i>Активность системы</li>
+                    <li>
+                        <i class="bi bi-check me-2 text-success"></i>
+                        <a href="{% url 'admin_panel:financial_reports' %}" class="text-decoration-none">
+                            Финансовые отчеты
+                        </a>
+                    </li>
+                </ul>
+                <div class="mt-3">
+                    <a href="{% url 'admin_panel:financial_reports' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Открыть финансовые отчеты
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

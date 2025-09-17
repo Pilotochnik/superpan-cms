@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Категории склада{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="bi bi-tags me-2"></i>
+                    Категории склада
+                </h1>
+                <a href="{% url 'warehouse:category_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Добавить категорию
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    {% if categories %}
+                        <div class="row">
+                            {% for category in categories %}
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ category.name }}</h5>
+                                        {% if category.description %}
+                                            <p class="card-text text-muted">{{ category.description }}</p>
+                                        {% endif %}
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                Товаров: {{ category.items.count }}
+                                            </small>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'warehouse:items_list' %}?category={{ category.id }}" class="btn btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="#" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-tags display-1 text-muted"></i>
+                            <h4 class="text-muted mt-3">Категории не найдены</h4>
+                            <p class="text-muted">Добавьте первую категорию для организации товаров</p>
+                            <a href="{% url 'warehouse:category_create' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>
+                                Добавить категорию
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

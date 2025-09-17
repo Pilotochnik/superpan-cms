@@ -1,0 +1,1104 @@
+{% extends 'base.html' %}
+
+{% block title %}Задачи - {{ project.name }} - SuperPan{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kanban-board {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        padding: 20px 0;
+        min-height: 70vh;
+    }
+
+    .kanban-column {
+        flex: 0 0 300px;
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        border: 2px dashed #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+    .kanban-column.drag-over {
+        border-color: var(--primary-color);
+        background-color: rgba(44, 90, 160, 0.05);
+    }
+
+    .kanban-column-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .kanban-column-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .kanban-column-count {
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .kanban-items {
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .kanban-item {
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        cursor: grab;
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .kanban-item:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    .kanban-item:active {
+        cursor: grabbing;
+        transform: scale(1.02);
+    }
+
+    .kanban-item.dragging {
+        opacity: 0.5;
+        transform: rotate(5deg);
+    }
+
+    .kanban-item.pending-approval {
+        border: 2px solid #ffc107;
+        background: linear-gradient(135deg, #fff3cd, #ffffff);
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    }
+
+    .kanban-item.pending-approval:hover {
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+
+    .kanban-item-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+        color: #333;
+    }
+
+    .kanban-item-description {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+
+    .kanban-item-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #f1f3f4;
+    }
+
+    .kanban-item-amount {
+        font-weight: bold;
+        color: var(--primary-color);
+        font-size: 1rem;
+    }
+
+    .kanban-item-priority {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .priority-high {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+
+    .priority-medium {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .priority-low {
+        background-color: #e8f5e8;
+        color: #2e7d32;
+    }
+
+    .expense-type-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        border-radius: 8px;
+        background-color: #e9ecef;
+        color: #495057;
+    }
+
+    .add-item-btn {
+        width: 100%;
+        border: 2px dashed #dee2e6;
+        background: transparent;
+        color: #6c757d;
+        padding: 15px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .add-item-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        background-color: rgba(44, 90, 160, 0.05);
+    }
+
+    .project-stats {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #1e3d72 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .budget-progress {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        height: 8px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+
+    .budget-progress-bar {
+        height: 100%;
+        background-color: white;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+
+    .floating-add-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color) 0%, #1e3d72 100%);
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 20px rgba(44, 90, 160, 0.3);
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+
+    .floating-add-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 30px rgba(44, 90, 160, 0.4);
+    }
+
+    /* Мобильная адаптивность для канбан-доски */
+    @media (max-width: 768px) {
+        .kanban-board {
+            flex-direction: column;
+            gap: 15px;
+            padding: 15px 0;
+        }
+        
+        .kanban-column {
+            flex: 1 1 auto;
+            min-width: auto;
+            margin-bottom: 15px;
+        }
+        
+        .kanban-items {
+            min-height: 200px;
+        }
+        
+        .kanban-item {
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .kanban-item-title {
+            font-size: 0.9rem;
+        }
+        
+        .kanban-item-description {
+            font-size: 0.8rem;
+        }
+        
+        .kanban-item-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .project-stats {
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-number {
+            font-size: 1.2rem;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+        }
+        
+        .floating-add-btn {
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+        
+        /* Улучшенные модальные окна */
+        .modal-dialog {
+            margin: 10px;
+            max-width: calc(100% - 20px);
+        }
+        
+        .modal-body {
+            padding: 20px 15px;
+        }
+        
+        /* Touch-friendly элементы */
+        .kanban-item {
+            min-height: 60px;
+            cursor: pointer;
+        }
+        
+        .btn-group {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            margin-bottom: 5px;
+            border-radius: 20px !important;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .kanban-board {
+            padding: 10px 0;
+            gap: 10px;
+        }
+        
+        .kanban-column {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .kanban-column-header {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+        }
+        
+        .kanban-column-title {
+            font-size: 1rem;
+        }
+        
+        .kanban-items {
+            min-height: 150px;
+            gap: 8px;
+        }
+        
+        .kanban-item {
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .kanban-item-title {
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+        
+        .kanban-item-description {
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        
+        .expense-type-badge,
+        .kanban-item-priority {
+            font-size: 0.6rem;
+            padding: 1px 4px;
+        }
+        
+        .kanban-item-amount {
+            font-size: 0.9rem;
+        }
+        
+        .project-stats {
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .stat-number {
+            font-size: 1rem;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+        }
+        
+        /* Горизонтальная прокрутка для очень маленьких экранов */
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn-group-sm .btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+    }
+    
+    /* Touch устройства */
+    @media (hover: none) and (pointer: coarse) {
+        .kanban-item {
+            transition: all 0.2s ease;
+        }
+        
+        .kanban-item:active {
+            transform: scale(0.98);
+            background-color: #f8f9fa;
+        }
+        
+        .floating-add-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .add-item-btn:active {
+            background-color: rgba(44, 90, 160, 0.1);
+        }
+        
+        /* Убираем hover эффекты на touch устройствах */
+        .kanban-item:hover {
+            transform: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .floating-add-btn:hover {
+            transform: none;
+            box-shadow: 0 4px 20px rgba(44, 90, 160, 0.3);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:dashboard' %}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:detail' project.pk %}">{{ project.name }}</a></li>
+                <li class="breadcrumb-item active">Задачи</li>
+            </ol>
+        </nav>
+        <h1 class="h2 mb-0">{{ project.name }}</h1>
+        <p class="text-muted">Управление задачами проекта</p>
+    </div>
+    <div>
+        <a href="{% url 'kanban:analytics' project.pk %}" class="btn btn-outline-primary me-2">
+            <i class="bi bi-graph-up me-2"></i>Аналитика
+        </a>
+        <a href="{% url 'projects:detail' project.pk %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>К проекту
+        </a>
+    </div>
+</div>
+
+<!-- Project Statistics -->
+<div class="project-stats">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_expenses.in_progress_count|default:0 }}</div>
+                <div class="stat-label">В работе</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_expenses.completed_count|default:0 }}</div>
+                <div class="stat-label">Выполнено</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_expenses.new_count|default:0 }}</div>
+                <div class="stat-label">Новые</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_expenses.total_count|default:0 }}</div>
+                <div class="stat-label">Всего задач</div>
+            </div>
+        </div>
+    </div>
+    <div class="budget-progress">
+        <div class="budget-progress-bar" style="width: {{ total_expenses.completion_percent|default:0 }}%;"></div>
+    </div>
+    <div class="text-center mt-2">
+        <small>Выполнено {{ total_expenses.completion_percent|default:0|floatformat:1 }}% задач</small>
+    </div>
+</div>
+
+<!-- Kanban Board -->
+<div class="kanban-board" id="kanbanBoard">
+    {% for column in columns %}
+    <div class="kanban-column" data-column-id="{{ column.id }}" style="border-left-color: {{ column.color }};">
+        <div class="kanban-column-header">
+            <h5 class="kanban-column-title">{{ column.name }}</h5>
+            <div class="kanban-column-count">{{ column.items.count }}</div>
+        </div>
+        
+        <div class="kanban-items" data-column-id="{{ column.id }}">
+            {% for item in column.items.all %}
+                <div class="kanban-item {% if item.has_pending_status_change %}pending-approval{% endif %}" 
+                     data-item-id="{{ item.id }}" 
+                     draggable="true"
+                     style="border-left-color: {% if item.category %}{{ item.category.color }}{% else %}var(--primary-color){% endif %};">
+                
+                <div class="kanban-item-title">
+                    {{ item.title }}
+                    {% if item.has_pending_status_change %}
+                    <span class="badge bg-warning ms-2" title="Ожидает утверждения админа">
+                        <i class="bi bi-clock"></i> Ожидает
+                    </span>
+                    {% endif %}
+                </div>
+                
+                {% if item.description %}
+                <div class="kanban-item-description">
+                    {{ item.description|truncatechars:100 }}
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="expense-type-badge">{{ item.get_task_type_display }}</span>
+                    <span class="kanban-item-priority priority-{{ item.priority }}">
+                        {{ item.get_priority_display }}
+                    </span>
+                </div>
+
+                <div class="kanban-item-meta">
+                    <div class="kanban-item-amount">{{ item.estimated_hours|floatformat:1 }} ч</div>
+                    <div class="small text-muted">
+                        <i class="bi bi-person-circle me-1"></i>
+                        {{ item.created_by.first_name.0|default:item.created_by.email.0|upper }}{{ item.created_by.last_name.0|default:"" }}
+                    </div>
+                </div>
+
+                {% if item.due_date %}
+                <div class="small text-muted mt-1">
+                    <i class="bi bi-calendar me-1"></i>
+                    до {{ item.due_date|date:"d.m.Y" }}
+                </div>
+                {% endif %}
+
+                <div class="mt-2">
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="viewExpenseItem('{{ item.id }}')">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info me-1" onclick="showCommentModal('{{ item.id }}')" title="Добавить комментарий">
+                        <i class="bi bi-chat-dots"></i>
+                    </button>
+                    {% if can_manage %}
+                    <button class="btn btn-sm btn-outline-warning me-1" onclick="editExpenseItem('{{ item.id }}')">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    {% if item.status == 'pending' or item.status == 'in_review' %}
+                    <button class="btn btn-sm btn-outline-danger" onclick="rejectExpenseItem('{{ item.id }}')">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    {% endif %}
+                    {% endif %}
+                    
+                    <!-- Кнопки для подтверждения/отклонения запросов на изменение статуса -->
+                    {% if item.has_pending_status_change and user.is_admin_role %}
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-success me-1" onclick="approveStatusChange('{{ item.id }}')" title="Утвердить изменение статуса">
+                            <i class="bi bi-check-circle"></i> Утвердить
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectStatusChange('{{ item.id }}')" title="Отклонить изменение статуса">
+                            <i class="bi bi-x-circle"></i> Отклонить
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                <p class="mt-2 mb-0">Нет элементов</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if can_add_expenses and column.column_type == 'new' %}
+        <button class="add-item-btn mt-3" onclick="showAddExpenseModal()">
+            <i class="bi bi-plus-circle me-2"></i>Добавить задачу
+        </button>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Floating Add Button -->
+{% if can_add_expenses %}
+<button class="floating-add-btn" onclick="showAddExpenseModal()" title="Добавить задачу">
+    <i class="bi bi-plus"></i>
+</button>
+{% endif %}
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Добавить задачу
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addExpenseForm">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="expenseTitle" class="form-label">Название расхода *</label>
+                                <input type="text" class="form-control" id="expenseTitle" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="expenseAmount" class="form-label">Планируемые часы *</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="expenseAmount" step="0.5" min="0" required>
+                                    <span class="input-group-text">ч</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expenseType" class="form-label">Тип задачи</label>
+                                <select class="form-select" id="expenseType">
+                                    <option value="purchase">Закупка</option>
+                                    <option value="work">Работа</option>
+                                    <option value="delivery">Поставка</option>
+                                    <option value="installation">Монтаж</option>
+                                    <option value="control">Контроль</option>
+                                    <option value="documentation">Документация</option>
+                                    <option value="other">Прочее</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expensePriority" class="form-label">Приоритет</label>
+                                <select class="form-select" id="expensePriority">
+                                    <option value="low">Низкий</option>
+                                    <option value="medium" selected>Средний</option>
+                                    <option value="high">Высокий</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if categories %}
+                    <div class="mb-3">
+                        <label for="expenseCategory" class="form-label">Категория</label>
+                        <select class="form-select" id="expenseCategory">
+                            <option value="">Выберите категорию</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="expenseDescription" class="form-label">Описание</label>
+                        <textarea class="form-control" id="expenseDescription" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveExpenseBtn">
+                    <i class="bi bi-check me-2"></i>Добавить задачу
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Expense Modal -->
+<div class="modal fade" id="rejectExpenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-x-circle me-2"></i>Отклонить расход
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Укажите причину отклонения расхода:</p>
+                <textarea class="form-control" id="rejectionReason" rows="3" placeholder="Причина отклонения..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmRejectBtn">
+                    <i class="bi bi-x me-2"></i>Отклонить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comment Modal -->
+<div class="modal fade" id="commentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-chat-dots me-2"></i>Добавить комментарий
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="commentModalForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="commentText" class="form-label">Комментарий *</label>
+                        <textarea class="form-control" id="commentText" name="text" rows="4" placeholder="Ваш комментарий..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="commentFile" class="form-label">Прикрепить файл (необязательно)</label>
+                        <input type="file" class="form-control" id="commentFile" name="attachments" 
+                               accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.mp4,.avi,.mov,.txt">
+                        <div class="form-text">Поддерживаются: изображения, PDF, документы, видео (макс. 50 МБ)</div>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="commentInternal" name="is_internal">
+                        <label class="form-check-label" for="commentInternal">
+                            Внутренний комментарий (виден только команде)
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="saveCommentBtn">
+                    <i class="bi bi-check me-2"></i>Добавить комментарий
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let draggedItem = null;
+let currentRejectItemId = null;
+
+// Drag and Drop functionality
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDragAndDrop();
+    initializeModals();
+});
+
+function initializeDragAndDrop() {
+    const items = document.querySelectorAll('.kanban-item');
+    const columns = document.querySelectorAll('.kanban-items');
+
+    items.forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+    });
+
+    columns.forEach(column => {
+        column.addEventListener('dragover', handleDragOver);
+        column.addEventListener('drop', handleDrop);
+        column.addEventListener('dragenter', handleDragEnter);
+        column.addEventListener('dragleave', handleDragLeave);
+    });
+}
+
+function handleDragStart(e) {
+    draggedItem = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.outerHTML);
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    draggedItem = null;
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDragEnter(e) {
+    this.parentElement.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    this.parentElement.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+
+    this.parentElement.classList.remove('drag-over');
+
+    if (draggedItem && draggedItem !== this) {
+        const itemId = draggedItem.getAttribute('data-item-id');
+        const targetColumnId = this.getAttribute('data-column-id');
+        
+        moveExpenseItem(itemId, targetColumnId);
+    }
+
+    return false;
+}
+
+function moveExpenseItem(itemId, targetColumnId) {
+    fetch('{% url "kanban:move_expense" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            item_id: itemId,
+            target_column_id: targetColumnId,
+            position: 0
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Ошибка при перемещении элемента');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при перемещении элемента');
+    });
+}
+
+function initializeModals() {
+    const saveExpenseBtn = document.getElementById('saveExpenseBtn');
+    const confirmRejectBtn = document.getElementById('confirmRejectBtn');
+    const saveCommentBtn = document.getElementById('saveCommentBtn');
+
+    if (saveExpenseBtn) {
+        saveExpenseBtn.addEventListener('click', saveExpense);
+    }
+
+    if (confirmRejectBtn) {
+        confirmRejectBtn.addEventListener('click', confirmReject);
+    }
+
+    if (saveCommentBtn) {
+        saveCommentBtn.addEventListener('click', saveComment);
+    }
+}
+
+function showAddExpenseModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addExpenseModal'));
+    modal.show();
+}
+
+function saveExpense() {
+    const title = document.getElementById('expenseTitle').value.trim();
+    const estimated_hours = document.getElementById('expenseAmount').value;
+    const description = document.getElementById('expenseDescription').value.trim();
+    const expenseType = document.getElementById('expenseType').value;
+    const priority = document.getElementById('expensePriority').value;
+    const categoryId = document.getElementById('expenseCategory')?.value || null;
+
+    if (!title || !estimated_hours) {
+        alert('Пожалуйста, заполните обязательные поля');
+        return;
+    }
+
+    const saveBtn = document.getElementById('saveExpenseBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="loading"></span> Сохранение...';
+
+    fetch('{% url "kanban:create_expense" project.pk %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            title: title,
+            estimated_hours: estimated_hours,
+            description: description,
+            task_type: expenseType,
+            priority: priority,
+            category_id: categoryId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Ошибка при создании расхода');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при создании расхода');
+    })
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check me-2"></i>Добавить задачу';
+    });
+}
+
+function viewExpenseItem(itemId) {
+    window.location.href = `/kanban/expense/${itemId}/`;
+}
+
+function editExpenseItem(itemId) {
+    window.location.href = `/kanban/expense/${itemId}/edit/`;
+}
+
+function rejectExpenseItem(itemId) {
+    currentRejectItemId = itemId;
+    const modal = new bootstrap.Modal(document.getElementById('rejectExpenseModal'));
+    modal.show();
+}
+
+function confirmReject() {
+    const reason = document.getElementById('rejectionReason').value.trim();
+    
+    if (!reason) {
+        alert('Пожалуйста, укажите причину отклонения');
+        return;
+    }
+
+    const confirmBtn = document.getElementById('confirmRejectBtn');
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="loading"></span> Отклонение...';
+
+    fetch(`/kanban/api/reject-expense/${currentRejectItemId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Ошибка при отклонении расхода');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при отклонении расхода');
+    })
+    .finally(() => {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="bi bi-x me-2"></i>Отклонить';
+    });
+}
+
+let currentCommentItemId = null;
+
+function showCommentModal(itemId) {
+    currentCommentItemId = itemId;
+    const modal = new bootstrap.Modal(document.getElementById('commentModal'));
+    modal.show();
+    
+    // Очищаем форму при открытии
+    document.getElementById('commentModalForm').reset();
+}
+
+function saveComment() {
+    const form = document.getElementById('commentModalForm');
+    const formData = new FormData(form);
+    
+    const text = formData.get('text').trim();
+    if (!text) {
+        alert('Пожалуйста, введите текст комментария');
+        return;
+    }
+    
+    const saveBtn = document.getElementById('saveCommentBtn');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Сохранение...';
+    
+    fetch(`/kanban/api/add-comment/${currentCommentItemId}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('commentModal'));
+            modal.hide();
+            
+            // Показываем уведомление об успехе
+            showNotification('Комментарий добавлен успешно!', 'success');
+        } else {
+            alert('Ошибка при добавлении комментария: ' + (data.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при добавлении комментария');
+    })
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-check me-2"></i>Добавить комментарий';
+    });
+}
+
+function showNotification(message, type = 'info') {
+    // Создаем уведомление
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Автоматически удаляем через 3 секунды
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
+// Функции для подтверждения/отклонения запросов на изменение статуса
+function approveStatusChange(itemId) {
+    if (confirm('Утвердить изменение статуса задачи?')) {
+        fetch(`/kanban/api/approve-status-change/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                location.reload(); // Перезагружаем страницу для обновления статусов
+            } else {
+                showNotification(data.error || 'Ошибка при утверждении', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Ошибка сервера', 'error');
+        });
+    }
+}
+
+function rejectStatusChange(itemId) {
+    const reason = prompt('Укажите причину отклонения (необязательно):');
+    if (reason !== null) { // Если пользователь не нажал "Отмена"
+        fetch(`/kanban/api/reject-status-change/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                reason: reason
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                location.reload(); // Перезагружаем страницу для обновления статусов
+            } else {
+                showNotification(data.error || 'Ошибка при отклонении', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Ошибка сервера', 'error');
+        });
+    }
+}
+</script>
+{% endblock %}

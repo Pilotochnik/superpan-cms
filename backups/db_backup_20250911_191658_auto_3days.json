@@ -1,0 +1,7 @@
+{
+  "created_at": "2025-09-11T19:16:58.209217",
+  "description": "auto_3days",
+  "db_size": 774144,
+  "original_db": "C:/Users/10/PycharmProjects/superpan/db.sqlite3",
+  "backup_path": "backups/db_backup_20250911_191658_auto_3days.sqlite3"
+}

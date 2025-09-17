@@ -1,0 +1,133 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}Регистрация пользователя через Telegram{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:accounts_user_changelist' %}">Пользователи</a>
+&rsaquo; Регистрация через Telegram
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="module aligned">
+    <h1>📱 Регистрация пользователя через Telegram</h1>
+    
+    <div class="description">
+        <p>Зарегистрируйте нового пользователя, указав его данные из Telegram.</p>
+        <p>После регистрации пользователь сможет войти в систему через Telegram бота.</p>
+    </div>
+    
+    <form method="post" class="form-horizontal">
+        {% csrf_token %}
+        
+        <fieldset class="module aligned">
+            <h2>📋 Данные пользователя</h2>
+            
+            <div class="form-row">
+                <div class="field-box">
+                    <label for="telegram_id" class="required">Telegram ID:</label>
+                    <input type="number" name="telegram_id" id="telegram_id" required 
+                           placeholder="434532312" style="width: 200px;">
+                    <p class="help">Уникальный ID пользователя в Telegram</p>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="field-box">
+                    <label for="first_name" class="required">Имя:</label>
+                    <input type="text" name="first_name" id="first_name" required 
+                           placeholder="Иван" style="width: 200px;">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="field-box">
+                    <label for="last_name" class="required">Фамилия:</label>
+                    <input type="text" name="last_name" id="last_name" required 
+                           placeholder="Петров" style="width: 200px;">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="field-box">
+                    <label for="username">Username в Telegram:</label>
+                    <input type="text" name="username" id="username" 
+                           placeholder="@username" style="width: 200px;">
+                    <p class="help">Необязательно, если есть</p>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="field-box">
+                    <label for="role" class="required">Роль:</label>
+                    <select name="role" id="role" required style="width: 250px;">
+                        {% for value, label in roles %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="help">Выберите роль пользователя в системе</p>
+                </div>
+            </div>
+        </fieldset>
+        
+        <div class="submit-row">
+            <input type="submit" value="✅ Зарегистрировать пользователя" class="default" name="_save">
+            <a href="{% url 'admin:accounts_user_changelist' %}" class="button cancel-link">❌ Отмена</a>
+        </div>
+    </form>
+    
+    <div class="help-text" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #007cba;">
+        <h3>📝 Инструкция:</h3>
+        <ol>
+            <li>Получите Telegram ID пользователя (можно через @userinfobot)</li>
+            <li>Заполните форму с данными пользователя</li>
+            <li>Выберите подходящую роль</li>
+            <li>Нажмите "Зарегистрировать пользователя"</li>
+        </ol>
+        
+        <h3>🔐 Роли пользователей:</h3>
+        <ul>
+            <li><strong>Администратор</strong> - полный доступ ко всем функциям</li>
+            <li><strong>Главный инженер</strong> - управление прорабами и ценами</li>
+            <li><strong>Прораб</strong> - управление задачами проекта</li>
+            <li><strong>Кладовщик</strong> - управление складом</li>
+            <li><strong>Снабженец</strong> - управление товарами</li>
+            <li><strong>Подрядчик</strong> - ограниченный доступ</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.field-box {
+    margin-bottom: 15px;
+}
+
+.field-box label {
+    display: inline-block;
+    width: 120px;
+    font-weight: bold;
+}
+
+.field-box input, .field-box select {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.help-text h3 {
+    color: #007cba;
+    margin-top: 0;
+}
+
+.help-text ul, .help-text ol {
+    margin-left: 20px;
+}
+
+.help-text li {
+    margin-bottom: 5px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+
+{% block title %}Мой профиль - SuperPan{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-1">Мой профиль</h1>
+                <p class="text-muted">Управление личной информацией и настройками</p>
+            </div>
+            <a href="{% url 'projects:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>На главную
+            </a>
+        </div>
+
+        <!-- Карточка профиля -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar-lg me-3">
+                        {{ user.first_name.0|default:user.email.0|upper }}
+                    </div>
+                    <div>
+                        <h5 class="mb-1">{{ user.get_full_name|default:user.email }}</h5>
+                        <span class="badge 
+                            {% if user.role == 'superuser' %}bg-danger
+                            {% elif user.role == 'foreman' %}bg-warning
+                            {% else %}bg-success{% endif %}">
+                            {{ user.get_role_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email</label>
+                            <p class="text-muted">{{ user.email }}</p>
+                        </div>
+                        
+                        {% if user.phone %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Телефон</label>
+                            <p class="text-muted">{{ user.phone }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Статус аккаунта</label>
+                            <p class="text-muted">
+                                {% if user.is_active %}
+                                    <span class="text-success">
+                                        <i class="bi bi-check-circle me-1"></i>Активен
+                                    </span>
+                                {% else %}
+                                    <span class="text-danger">
+                                        <i class="bi bi-x-circle me-1"></i>Неактивен
+                                    </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Дата регистрации</label>
+                            <p class="text-muted">{{ user.created_at|date:"d.m.Y H:i" }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Последний вход</label>
+                            <p class="text-muted">
+                                {% if user.last_login %}
+                                    {{ user.last_login|date:"d.m.Y H:i" }}
+                                {% else %}
+                                    Никогда
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Сессия</label>
+                            <p class="text-muted">
+                                {% if user.is_active_session %}
+                                    <span class="text-success">
+                                        <i class="bi bi-circle-fill me-1"></i>Онлайн
+                                    </span>
+                                {% else %}
+                                    <span class="text-secondary">
+                                        <i class="bi bi-circle me-1"></i>Оффлайн
+                                    </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Telegram интеграция -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-telegram me-2"></i>Telegram интеграция
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if user.telegram_profile %}
+                    <div class="alert alert-success">
+                        <h6><i class="bi bi-check-circle"></i> Telegram аккаунт подключен</h6>
+                        <p class="mb-2">
+                            <strong>Telegram ID:</strong> {{ user.telegram_profile.telegram_id }}<br>
+                            <strong>Username:</strong> @{{ user.telegram_profile.username|default:"не указан" }}<br>
+                            <strong>Имя в Telegram:</strong> {{ user.telegram_profile.first_name }} {{ user.telegram_profile.last_name }}
+                        </p>
+                        <a href="{% url 'accounts:telegram_disconnect' %}" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-x-circle"></i>
+                            Отключить Telegram
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> Telegram не подключен</h6>
+                        <p class="mb-3">Подключите ваш Telegram аккаунт для управления проектами через бота.</p>
+                        <a href="{% url 'accounts:telegram_connect' %}" class="btn btn-primary">
+                            <i class="bi bi-telegram"></i>
+                            Подключить Telegram
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Форма редактирования -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil me-2"></i>Редактировать профиль
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="profile">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                    {{ form.first_name.label }}
+                                </label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.first_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                    {{ form.last_name.label }}
+                                </label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.last_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label">
+                            {{ form.phone.label }}
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ form.phone.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-3 justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Статистика пользователя -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>Моя статистика
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    {% if user.role == 'superuser' %}
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card">
+                            <i class="bi bi-folder" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h4 class="mt-2 mb-1">{{ user.created_projects.count }}</h4>
+                            <p class="text-muted mb-0">Создано проектов</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card">
+                            <i class="bi bi-people" style="font-size: 2rem; color: var(--success-color);"></i>
+                            <h4 class="mt-2 mb-1">{{ total_users|default:0 }}</h4>
+                            <p class="text-muted mb-0">Всего пользователей</p>
+                        </div>
+                    </div>
+                    {% elif user.role == 'foreman' %}
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card">
+                            <i class="bi bi-building" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h4 class="mt-2 mb-1">{{ user.managed_projects.count }}</h4>
+                            <p class="text-muted mb-0">Управляю проектами</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card">
+                            <i class="bi bi-check-circle" style="font-size: 2rem; color: var(--success-color);"></i>
+                            <h4 class="mt-2 mb-1">{{ approved_expenses|default:0 }}</h4>
+                            <p class="text-muted mb-0">Одобрено расходов</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card">
+                            <i class="bi bi-folder-check" style="font-size: 2rem; color: var(--primary-color);"></i>
+                            <h4 class="mt-2 mb-1">{{ user.project_memberships.count }}</h4>
+                            <p class="text-muted mb-0">Участвую в проектах</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card">
+                            <i class="bi bi-receipt" style="font-size: 2rem; color: var(--warning-color);"></i>
+                            <h4 class="mt-2 mb-1">{{ user.created_expense_items.count }}</h4>
+                            <p class="text-muted mb-0">Создано расходов</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card">
+                            <i class="bi bi-clock-history" style="font-size: 2rem; color: var(--info-color);"></i>
+                            <h4 class="mt-2 mb-1">{{ days_since_registration|default:0 }}</h4>
+                            <p class="text-muted mb-0">Дней в системе</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card">
+                            <i class="bi bi-activity" style="font-size: 2rem; color: var(--success-color);"></i>
+                            <h4 class="mt-2 mb-1">{{ user.project_activities.count }}</h4>
+                            <p class="text-muted mb-0">Активностей</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Безопасность -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-check me-2"></i>Безопасность
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Устройство</label>
+                            <p class="text-muted">
+                                {% if user.device_fingerprint %}
+                                    <i class="bi bi-check-circle text-success me-1"></i>
+                                    Привязано к текущему устройству
+                                {% else %}
+                                    <i class="bi bi-exclamation-triangle text-warning me-1"></i>
+                                    Устройство не привязано
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Последний IP</label>
+                            <p class="text-muted">
+                                {{ user.last_login_ip|default:"Не определен" }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Неудачные попытки входа</label>
+                            <p class="text-muted">
+                                {% if user.failed_login_attempts > 0 %}
+                                    <span class="text-warning">{{ user.failed_login_attempts }}</span>
+                                {% else %}
+                                    <span class="text-success">0</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        {% if user.locked_until %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Блокировка до</label>
+                            <p class="text-danger">{{ user.locked_until|date:"d.m.Y H:i" }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Информация о безопасности:</strong>
+                    Ваш аккаунт привязан к одному устройству. Для входа с другого устройства 
+                    обратитесь к администратору системы.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Access Key Usage -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-key me-2"></i>
+            Использовать ключ доступа
+        </h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">Если у вас есть ключ доступа к проекту, введите его ниже:</p>
+        <form method="post" action="{% url 'accounts:use_access_key' %}" enctype="application/x-www-form-urlencoded">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="access_key">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="access_key" class="form-label">Ключ доступа</label>
+                        <input type="text" class="form-control" id="access_key" name="access_key" 
+                               placeholder="Введите ключ доступа к проекту" required
+                               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                        <div class="form-text">Ключ доступа предоставляется администратором или прорабом проекта</div>
+                        <div class="form-text text-info">
+                            <small>Длина ключа: <span id="key_length">0</span> символов</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-unlock me-2"></i>Получить доступ
+                        </button>
+                        <button type="button" class="btn btn-outline-primary ms-2" onclick="submitAccessKeyAjax()">
+                            <i class="bi bi-send me-2"></i>AJAX
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <script>
+        // Отслеживаем изменения в поле ключа
+        document.getElementById('access_key').addEventListener('input', function(e) {
+            const length = e.target.value.length;
+            document.getElementById('key_length').textContent = length;
+        });
+        
+        function submitAccessKeyAjax() {
+            const key = document.getElementById('access_key').value.trim();
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            console.log('AJAX submit - Key:', key);
+            console.log('AJAX submit - CSRF:', csrfToken);
+            
+            if (!key) {
+                alert('Пожалуйста, введите ключ доступа');
+                return;
+            }
+            
+            // Отправляем JSON запрос
+            fetch('{% url "accounts:use_access_key" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    key: key
+                })
+            })
+            .then(response => {
+                console.log('AJAX response status:', response.status);
+                
+                // Если успешный ответ (2xx) или редирект (3xx), перенаправляем на страницу проектов
+                if (response.ok || response.status >= 300) {
+                    console.log('Access key processed successfully, redirecting...');
+                    window.location.href = '{% url "projects:dashboard" %}';
+                    return;
+                }
+                
+                // Если ошибка, показываем сообщение
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    });
+                }
+                
+                return response.text();
+            })
+            .then(data => {
+                if (data) {
+                    console.log('AJAX response data:', data);
+                }
+            })
+            .catch(error => {
+                console.error('AJAX error:', error);
+                alert('Ошибка при обработке ключа доступа: ' + error.message);
+            });
+        }
+        </script>
+    </div>
+</div>
+
+<!-- User Activity -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-activity me-2"></i>
+            Активность
+        </h5>
+        <a href="{% url 'accounts:activity' %}" class="btn btn-sm btn-outline-primary">
+            Подробнее
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Статистика:</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Создано проектов:</strong> {{ user_stats.created_projects }}</li>
+                    <li><strong>Добавлено расходов:</strong> {{ user_stats.created_expenses }}</li>
+                    <li><strong>Доступ к проектам:</strong> {{ user_stats.project_memberships }}</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Последний вход:</h6>
+                {% if user_stats.last_login %}
+                    <p>{{ user_stats.last_login|date:"d.m.Y H:i" }}</p>
+                {% else %}
+                    <p class="text-muted">Первый вход</p>
+                {% endif %}
+                
+                <h6>Регистрация:</h6>
+                <p>{{ user_stats.date_joined|date:"d.m.Y" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "superpan"
+version = "0.1.0"
+description = "SuperPan - Construction Project Management System"
+authors = ["Pilotochnik <admin@superpan.ru>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+Django = ">=4.2,<5.0"
+djangorestframework = ">=3.14,<4.0"
+django-cors-headers = ">=4.0,<5.0"
+django-allauth = ">=0.50,<1.0"
+cryptography = ">=40.0,<42.0"
+Pillow = ">=9.0,<11.0"
+python-decouple = ">=3.0,<4.0"
+django-crispy-forms = ">=2.0,<3.0"
+crispy-bootstrap5 = ">=0.7,<1.0"
+psycopg2-binary = ">=2.9,<3.0"
+gunicorn = ">=20.0,<22.0"
+whitenoise = ">=6.0,<7.0"
+openpyxl = ">=3.0,<4.0"
+reportlab = ">=4.0,<5.0"
+django-ratelimit = ">=4.0,<5.0"
+requests = ">=2.28,<3.0"
+beautifulsoup4 = ">=4.11,<5.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

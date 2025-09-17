@@ -1,0 +1,229 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Улучшенные формы */
+    .form-row {
+        background: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .form-row label {
+        color: #2c5aa0;
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-row input, .form-row select, .form-row textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+        border-color: #2c5aa0;
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    }
+
+    .form-row .help {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
+    /* Улучшенные fieldsets */
+    fieldset {
+        background: white;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    fieldset h2 {
+        background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%);
+        color: white;
+        margin: 0;
+        padding: 20px 25px;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    fieldset .form-row {
+        box-shadow: none;
+        border-radius: 0;
+        margin: 0;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    fieldset .form-row:last-child {
+        border-bottom: none;
+    }
+
+    /* Кнопки сохранения */
+    .submit-row {
+        background: white;
+        padding: 20px 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        text-align: right;
+        margin-top: 25px;
+    }
+
+    .submit-row input[type="submit"] {
+        background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%);
+        border: none;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-left: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .submit-row input[type="submit"]:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3);
+    }
+
+    .submit-row .deletelink {
+        background: #dc3545;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .submit-row .deletelink:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    }
+
+    /* Инлайны */
+    .inline-group {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
+        overflow: hidden;
+    }
+
+    .inline-group h2 {
+        background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        color: white;
+        margin: 0;
+        padding: 15px 20px;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .inline-group .tabular {
+        padding: 20px;
+    }
+
+    .inline-group table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .inline-group th, .inline-group td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .inline-group th {
+        background-color: #f8f9fa;
+        color: #2c5aa0;
+        font-weight: 600;
+    }
+
+    /* Ошибки */
+    .errorlist {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 10px 15px;
+        border-radius: 6px;
+        border-left: 4px solid #dc3545;
+        margin-bottom: 15px;
+        list-style: none;
+    }
+
+    .errorlist li {
+        margin: 0;
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+        background: white;
+        padding: 15px 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 25px;
+    }
+
+    .breadcrumbs a {
+        color: #2c5aa0;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .breadcrumbs a:hover {
+        text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        fieldset h2, .inline-group h2 {
+            font-size: 1rem;
+            padding: 15px 20px;
+        }
+        
+        .form-row {
+            padding: 15px;
+        }
+        
+        .submit-row {
+            text-align: center;
+            padding: 15px;
+        }
+        
+        .submit-row input[type="submit"], .submit-row .deletelink {
+            width: 100%;
+            margin: 5px 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content_title %}
+{% if original %}
+    <h1 style="color: #2c5aa0; font-size: 2rem; margin-bottom: 10px;">
+        <i class="fas fa-edit"></i> Изменить {{ opts.verbose_name }}
+    </h1>
+    <p style="color: #6c757d; margin-bottom: 20px;">Редактирование записи в системе SuperPan</p>
+{% else %}
+    <h1 style="color: #2c5aa0; font-size: 2rem; margin-bottom: 10px;">
+        <i class="fas fa-plus"></i> Добавить {{ opts.verbose_name }}
+    </h1>
+    <p style="color: #6c757d; margin-bottom: 20px;">Создание новой записи в системе SuperPan</p>
+{% endif %}
+{% endblock %}

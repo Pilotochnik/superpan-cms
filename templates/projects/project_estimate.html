@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Смета проекта - {{ project.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .estimate-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border-left: 4px solid #007bff;
+        transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .expense-item {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-left: 4px solid #28a745;
+        transition: all 0.2s;
+    }
+    
+    .expense-item:hover {
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .expense-type-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 15px;
+    }
+    
+    .file-preview {
+        max-width: 100px;
+        max-height: 100px;
+        border-radius: 5px;
+        object-fit: cover;
+    }
+    
+    .progress-ring {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .progress-ring circle {
+        fill: transparent;
+        stroke-width: 8;
+        stroke-linecap: round;
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+    }
+    
+    .progress-ring .background {
+        stroke: #e9ecef;
+    }
+    
+    .progress-ring .progress {
+        stroke: #28a745;
+        stroke-dasharray: 314;
+        stroke-dashoffset: 314;
+        transition: stroke-dashoffset 0.5s ease;
+    }
+    
+    .progress-ring {
+        position: relative;
+    }
+    
+    .progress-ring .position-absolute {
+        position: absolute;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-calculator me-2"></i>Смета проекта
+                    </h2>
+                    <p class="text-muted mb-0">{{ project.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'projects:detail' project.pk %}" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-arrow-left me-1"></i>Назад к проекту
+                    </a>
+                    {% if can_add_expenses %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                        <i class="bi bi-plus-circle me-1"></i>Добавить расход
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Карточка сметы -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="estimate-card">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h3 class="mb-3">Общая информация по смете</h3>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h4 class="mb-1">{{ estimate.total_amount|floatformat:0 }} ₽</h4>
+                                    <small class="opacity-75">Общая сумма</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h4 class="mb-1">{{ estimate.spent_amount|floatformat:0 }} ₽</h4>
+                                    <small class="opacity-75">Потрачено</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h4 class="mb-1">{{ estimate.remaining_amount|floatformat:0 }} ₽</h4>
+                                    <small class="opacity-75">Остаток</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="progress-ring">
+                            <svg width="120" height="120">
+                                <circle class="background" cx="60" cy="60" r="50"></circle>
+                                <circle class="progress" cx="60" cy="60" r="50" 
+                                        data-percent="{{ estimate.utilization_percent|floatformat:1 }}"></circle>
+                            </svg>
+                            <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                <h5 class="mb-0">{{ estimate.utilization_percent|floatformat:1 }}%</h5>
+                                <small>Использовано</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика по типам расходов -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pie-chart me-2"></i>Статистика по типам расходов
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for stat in expense_stats %}
+                        <div class="col-md-3 mb-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ stat.get_task_type_display }}</h6>
+                                        <p class="mb-0 text-muted">{{ stat.count }} расходов</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-primary">{{ stat.total_amount|floatformat:0 }} ₽</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-inbox display-4"></i>
+                                <p class="mt-2">Расходы еще не добавлены</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список расходов -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>Все расходы
+                    </h5>
+                    <span class="badge bg-primary">{{ expenses.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% for expense in expenses %}
+                    <div class="expense-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">{{ expense.title }}</h6>
+                                <p class="text-muted mb-1">{{ expense.description|truncatechars:100 }}</p>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge expense-type-badge bg-info">{{ expense.get_task_type_display }}</span>
+                                    <span class="badge bg-{% if expense.status == 'approved' %}success{% elif expense.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                        {{ expense.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <h5 class="mb-0 text-primary">{{ expense.amount|floatformat:0 }} ₽</h5>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <small class="text-muted">{{ expense.created_by.get_full_name }}</small>
+                                <br>
+                                <small class="text-muted">{{ expense.created_at|date:"d.m.Y" }}</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                {% if expense.receipt_file %}
+                                <a href="{{ expense.receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </a>
+                                {% endif %}
+                                {% if expense.photo_files %}
+                                <a href="{{ expense.photo_files.url }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-image"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-inbox display-4"></i>
+                        <p class="mt-2">Расходы еще не добавлены</p>
+                        {% if can_add_expenses %}
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                            <i class="bi bi-plus-circle me-1"></i>Добавить первый расход
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления расхода -->
+{% if can_add_expenses %}
+<div class="modal fade" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Добавить расход
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addExpenseForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expenseTitle" class="form-label">Название расхода *</label>
+                                <input type="text" class="form-control" id="expenseTitle" name="title" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expenseType" class="form-label">Тип расхода *</label>
+                                <select class="form-select" id="expenseType" name="task_type" required>
+                                    <option value="">Выберите тип</option>
+                                    <option value="material">Материалы</option>
+                                    <option value="labor">Работы</option>
+                                    <option value="transport">Транспорт</option>
+                                    <option value="fuel">Топливо</option>
+                                    <option value="equipment">Оборудование</option>
+                                    <option value="other">Прочее</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expenseAmount" class="form-label">Сумма *</label>
+                                <input type="number" class="form-control" id="expenseAmount" name="amount" 
+                                       step="0.01" min="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expensePriority" class="form-label">Приоритет</label>
+                                <select class="form-select" id="expensePriority" name="priority">
+                                    <option value="low">Низкий</option>
+                                    <option value="medium" selected>Средний</option>
+                                    <option value="high">Высокий</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="expenseDescription" class="form-label">Описание</label>
+                        <textarea class="form-control" id="expenseDescription" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="receiptFile" class="form-label">Чек/Счет</label>
+                                <input type="file" class="form-control" id="receiptFile" name="receipt_file" 
+                                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                <div class="form-text">PDF, JPG, PNG, DOC, DOCX до 10MB</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="photoFiles" class="form-label">Фотографии</label>
+                                <input type="file" class="form-control" id="photoFiles" name="photo_files" 
+                                       accept=".jpg,.jpeg,.png" multiple>
+                                <div class="form-text">JPG, PNG до 5MB каждая</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check me-1"></i>Добавить расход
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Настройка круговой диаграммы
+    const progressCircle = document.querySelector('.progress');
+    if (progressCircle) {
+        const percent = parseFloat(progressCircle.getAttribute('data-percent'));
+        const circumference = 2 * Math.PI * 50; // r=50
+        const offset = circumference - (percent / 100) * circumference;
+        progressCircle.style.strokeDashoffset = offset;
+    }
+    
+    // Обработка формы добавления расхода
+    const form = document.getElementById('addExpenseForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            formData.append('project_id', '{{ project.id }}');
+            
+            fetch('{% url "kanban:add_expense" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Ошибка при добавлении расхода');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

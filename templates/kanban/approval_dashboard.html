@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SuperPan{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+    .request-card {
+        border-left: 4px solid #ffc107;
+        transition: all 0.3s ease;
+    }
+    .request-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+        font-size: 0.8rem;
+    }
+    .btn-approve {
+        background-color: #198754;
+        border-color: #198754;
+    }
+    .btn-reject {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    .project-link {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+    .project-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>{{ title }}
+                </h2>
+                <div>
+                    <span class="badge bg-warning fs-6">{{ pending_requests.count }} ожидают</span>
+                </div>
+            </div>
+
+            {% if pending_requests %}
+                <div class="row">
+                    {% for request in pending_requests %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card request-card h-100">
+                            <div class="card-header bg-light">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h6 class="card-title mb-0">{{ request.expense_item.title }}</h6>
+                                    <span class="badge bg-warning status-badge">Ожидает</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <strong>Проект:</strong><br>
+                                    <a href="{% url 'projects:detail' request.expense_item.project.id %}" class="project-link">
+                                        <i class="bi bi-building me-1"></i>{{ request.expense_item.project.name }}
+                                    </a>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <strong>Запросил:</strong><br>
+                                    <i class="bi bi-person me-1"></i>{{ request.requested_by.get_full_name }} 
+                                    <small class="text-muted">({{ request.requested_by.get_role_display }})</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <strong>Изменение статуса:</strong><br>
+                                    <span class="badge bg-secondary me-1">{{ request.get_old_status_display }}</span>
+                                    <i class="bi bi-arrow-right mx-1"></i>
+                                    <span class="badge bg-primary">{{ request.get_new_status_display }}</span>
+                                </div>
+                                
+                                {% if request.reason %}
+                                <div class="mb-3">
+                                    <strong>Причина:</strong><br>
+                                    <small class="text-muted">{{ request.reason }}</small>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <strong>Время запроса:</strong><br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar me-1"></i>{{ request.created_at|date:"d.m.Y H:i" }}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-approve btn-sm flex-fill" 
+                                            onclick="approveRequest({{ request.id }})">
+                                        <i class="bi bi-check-circle me-1"></i>Утвердить
+                                    </button>
+                                    <button class="btn btn-reject btn-sm flex-fill" 
+                                            onclick="rejectRequest({{ request.id }})">
+                                        <i class="bi bi-x-circle me-1"></i>Отклонить
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-muted">Нет ожидающих подтверждения запросов</h4>
+                    <p class="text-muted">Все запросы обработаны</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для отклонения -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Отклонить запрос</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="rejectionReason" class="form-label">Причина отклонения:</label>
+                    <textarea class="form-control" id="rejectionReason" rows="3" 
+                              placeholder="Укажите причину отклонения..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" onclick="confirmReject()">
+                    <i class="bi bi-x-circle me-1"></i>Отклонить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentRequestId = null;
+
+function approveRequest(requestId) {
+    if (confirm('Утвердить изменение статуса?')) {
+        fetch(`/kanban/api/approve-status/${requestId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Запрос успешно утвержден', 'success');
+                location.reload();
+            } else {
+                showNotification(data.error || 'Ошибка при утверждении', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Ошибка сервера', 'error');
+        });
+    }
+}
+
+function rejectRequest(requestId) {
+    currentRequestId = requestId;
+    const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    modal.show();
+}
+
+function confirmReject() {
+    const reason = document.getElementById('rejectionReason').value.trim();
+    
+    if (!reason) {
+        alert('Пожалуйста, укажите причину отклонения');
+        return;
+    }
+    
+    fetch(`/kanban/api/reject-status/${currentRequestId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Запрос отклонен', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+            location.reload();
+        } else {
+            showNotification(data.error || 'Ошибка при отклонении', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Ошибка сервера', 'error');
+    });
+}
+
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

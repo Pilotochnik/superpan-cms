@@ -1,0 +1,204 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block page_title %}Главная панель{% endblock %}
+{% block page_subtitle %}Обзор системы и статистика{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-number">{{ total_users }}</div>
+            <div class="stat-label">
+                <i class="bi bi-people me-1"></i>
+                Всего пользователей
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-number">{{ active_projects }}</div>
+            <div class="stat-label">
+                <i class="bi bi-folder me-1"></i>
+                Активных проектов
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-number">{{ pending_expenses }}</div>
+            <div class="stat-label">
+                <i class="bi bi-clock me-1"></i>
+                Расходов на рассмотрении
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-number">{{ total_budget|floatformat:0 }}₽</div>
+            <div class="stat-label">
+                <i class="bi bi-wallet2 me-1"></i>
+                Общий бюджет
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning me-2"></i>
+                    Быстрые действия
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'projects:create' %}" class="btn btn-success btn-admin">
+                        <i class="bi bi-folder-plus me-2"></i>
+                        Создать проект
+                    </a>
+                    <a href="{% url 'admin_panel:create_access_key' %}" class="btn btn-info btn-admin">
+                        <i class="bi bi-key me-2"></i>
+                        Выдать доступ к проекту
+                    </a>
+                    <a href="{% url 'admin_panel:reports' %}" class="btn btn-outline-primary btn-admin">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Посмотреть отчеты
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Состояние системы
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <strong>{{ active_users }}</strong>
+                        </div>
+                        <small class="text-muted">Активных пользователей</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <strong>{{ new_users_week }}</strong>
+                        </div>
+                        <small class="text-muted">Новых за неделю</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <strong>{{ approved_expenses }}</strong>
+                        </div>
+                        <small class="text-muted">Одобренных расходов</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="mb-2">
+                            <strong>{{ total_expenses }}</strong>
+                        </div>
+                        <small class="text-muted">Всего расходов</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="col-md-8">
+        <div class="card admin-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-activity me-2"></i>
+                    Последние действия
+                </h5>
+                <small class="text-muted">За последние дни</small>
+            </div>
+            <div class="card-body">
+                {% for activity in recent_activities %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ activity.user.get_full_name }}</strong>
+                            <span class="text-muted">{{ activity.description }}</span>
+                        </div>
+                        <small class="text-muted">{{ activity.created_at|date:"d.m H:i" }}</small>
+                    </div>
+                    <div class="mt-1">
+                        <small class="text-primary">
+                            <i class="bi bi-folder me-1"></i>
+                            {{ activity.project.name }}
+                        </small>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-3 text-muted">
+                    <i class="bi bi-activity" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">Нет недавней активности</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Logins -->
+{% if recent_logins %}
+<div class="row">
+    <div class="col-12">
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Последние входы в систему
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-admin mb-0">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>IP адрес</th>
+                                <th>Время входа</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for login in recent_logins %}
+                            <tr>
+                                <td>
+                                    <strong>{{ login.email|default:"—" }}</strong>
+                                </td>
+                                <td>
+                                    <code>{{ login.ip_address }}</code>
+                                </td>
+                                <td>{{ login.created_at|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    {% if login.success %}
+                                    <span class="badge bg-success">Успешно</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Неудачно</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

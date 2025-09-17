@@ -1,0 +1,107 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block page_title %}Создать ключ доступа{% endblock %}
+{% block page_subtitle %}Выдача доступа к проекту{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb breadcrumb-admin">
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:projects_list' %}">Проекты</a></li>
+        <li class="breadcrumb-item active">Создать ключ доступа</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-key me-2"></i>
+                    Новый ключ доступа
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="project_id" class="form-label">Проект *</label>
+                        <select class="form-select" id="project_id" name="project_id" required>
+                            <option value="">Выберите проект</option>
+                            {% for project in projects %}
+                            <option value="{{ project.pk }}" 
+                                    {% if request.GET.project == project.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ project.name }} ({{ project.budget|floatformat:0 }}₽)
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Выберите проект, к которому предоставляется доступ</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">Пользователь *</label>
+                        <select class="form-select" id="user_id" name="user_id" required>
+                            <option value="">Выберите пользователя</option>
+                            {% for user_obj in users %}
+                            <option value="{{ user_obj.pk }}">
+                                {{ user_obj.get_full_name }} ({{ user_obj.get_role_display }}) - {{ user_obj.email }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Выберите пользователя, которому предоставляется доступ</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Описание</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  placeholder="Краткое описание цели предоставления доступа"></textarea>
+                        <div class="form-text">Необязательное поле для заметок</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'admin_panel:projects_list' %}" class="btn btn-secondary btn-admin">
+                            <i class="bi bi-x me-2"></i>Отмена
+                        </a>
+                        <button type="submit" class="btn btn-success btn-admin">
+                            <i class="bi bi-key me-2"></i>Создать ключ доступа
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Help -->
+        <div class="card admin-card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Справка
+                </h6>
+            </div>
+            <div class="card-body">
+                <h6>Как работают ключи доступа:</h6>
+                <ol>
+                    <li><strong>Выберите проект</strong> - к которому нужно предоставить доступ</li>
+                    <li><strong>Выберите пользователя</strong> - кому предоставляется доступ</li>
+                    <li><strong>Добавьте описание</strong> - для чего предоставляется доступ</li>
+                    <li><strong>Система автоматически создаст</strong> уникальный ключ доступа</li>
+                </ol>
+                
+                <div class="alert alert-info mt-3">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-lightbulb me-2"></i>Важно знать:
+                    </h6>
+                    <ul class="mb-0">
+                        <li>Каждый пользователь может иметь только один активный ключ к проекту</li>
+                        <li>Ключи можно деактивировать в любой момент</li>
+                        <li>Пользователь получит доступ к канбан-доске и может добавлять расходы</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

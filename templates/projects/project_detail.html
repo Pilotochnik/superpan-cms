@@ -1,0 +1,519 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.name }} - SuperPan{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'projects:dashboard' %}">Главная</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'projects:list' %}">Проекты</a></li>
+                <li class="breadcrumb-item active">{{ project.name }}</li>
+            </ol>
+        </nav>
+        <h1 class="h2 mb-1">{{ project.name }}</h1>
+        <p class="text-muted">{{ project.get_status_display }}</p>
+    </div>
+    <div>
+        {% if can_manage %}
+        <a href="{% url 'projects:edit' project.pk %}" class="btn btn-outline-warning me-2">
+            <i class="bi bi-pencil me-2"></i>Редактировать
+        </a>
+        {% endif %}
+        <a href="{% url 'kanban:board' project.pk %}" class="btn btn-primary">
+            <i class="bi bi-kanban me-2"></i>Задачи
+        </a>
+    </div>
+</div>
+
+<!-- Статистические карточки -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card" style="background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%);">
+            <div class="card-body text-center text-white">
+                <i class="bi bi-wallet2" style="font-size: 2rem; opacity: 0.8;"></i>
+                <h3 class="mt-2 mb-1">{{ project.budget|floatformat:0 }}₽</h3>
+                <p class="mb-0">Общий бюджет</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+            <div class="card-body text-center text-white">
+                <i class="bi bi-graph-down-arrow" style="font-size: 2rem; opacity: 0.8;"></i>
+                <h3 class="mt-2 mb-1">{{ project.spent_amount|floatformat:0 }}₽</h3>
+                <p class="mb-0">Потрачено</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+            <div class="card-body text-center text-white">
+                <i class="bi bi-piggy-bank" style="font-size: 2rem; opacity: 0.8;"></i>
+                <h3 class="mt-2 mb-1">{{ project.remaining_budget|floatformat:0 }}₽</h3>
+                <p class="mb-0">Остаток</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
+            <div class="card-body text-center text-white">
+                <i class="bi bi-percent" style="font-size: 2rem; opacity: 0.8;"></i>
+                <h3 class="mt-2 mb-1">{{ project.budget_utilization_percent|floatformat:1 }}%</h3>
+                <p class="mb-0">Использовано</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Прогресс бюджета -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Использование бюджета</h5>
+        <div class="progress progress-modern mb-2" style="height: 20px;">
+            <div class="progress-bar 
+                {% if project.budget_utilization_percent > 90 %}bg-danger
+                {% elif project.budget_utilization_percent > 75 %}bg-warning
+                {% else %}bg-success{% endif %}" 
+                 style="width: {{ project.budget_utilization_percent }}%"></div>
+        </div>
+        <div class="d-flex justify-content-between">
+            <small class="text-muted">0₽</small>
+            <small class="text-muted">{{ project.budget|floatformat:0 }}₽</small>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Основная информация -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Информация о проекте
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if project.description %}
+                <div class="mb-3">
+                    <h6>Описание</h6>
+                    <p class="text-muted">{{ project.description }}</p>
+                </div>
+                {% endif %}
+                
+                {% if project.address %}
+                <div class="mb-3">
+                    <h6>Адрес объекта</h6>
+                    <p class="text-muted">
+                        <i class="bi bi-geo-alt me-1"></i>
+                        {{ project.address }}
+                    </p>
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    {% if project.start_date %}
+                    <div class="col-md-6">
+                        <h6>Дата начала</h6>
+                        <p class="text-muted">
+                            <i class="bi bi-calendar-check me-1"></i>
+                            {{ project.start_date|date:"d.m.Y" }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if project.end_date %}
+                    <div class="col-md-6">
+                        <h6>Дата окончания</h6>
+                        <p class="text-muted">
+                            <i class="bi bi-calendar-x me-1"></i>
+                            {{ project.end_date|date:"d.m.Y" }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Последние активности -->
+        {% if recent_activities %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>Последняя активность
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for activity in recent_activities %}
+                <div class="d-flex mb-3 {% if not forloop.last %}border-bottom pb-3{% endif %}">
+                    <div class="flex-shrink-0">
+                        <div class="user-avatar" style="width: 40px; height: 40px; font-size: 1rem;">
+                            {{ activity.user.first_name.0|default:activity.user.email.0|upper }}
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <div class="small">
+                            <strong>{{ activity.user.get_full_name|default:activity.user.email }}</strong>
+                            <span class="text-muted">{{ activity.description }}</span>
+                        </div>
+                        <div class="small text-muted">
+                            {{ activity.created_at|timesince }} назад
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Боковая панель -->
+    <div class="col-lg-4">
+        <!-- Команда проекта -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>Команда проекта
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Создатель проекта -->
+                <div class="d-flex align-items-center mb-3">
+                    <div class="user-avatar me-3">
+                        {{ project.created_by.first_name.0|default:project.created_by.email.0|upper }}
+                    </div>
+                    <div>
+                        <div class="fw-bold">{{ project.created_by.get_full_name|default:project.created_by.email }}</div>
+                        <small class="text-muted">Создатель проекта</small>
+                    </div>
+                </div>
+
+                <!-- Прораб -->
+                {% if project.foreman %}
+                <div class="d-flex align-items-center mb-3">
+                    <div class="user-avatar me-3">
+                        {{ project.foreman.first_name.0|default:project.foreman.email.0|upper }}
+                    </div>
+                    <div>
+                        <div class="fw-bold">{{ project.foreman.get_full_name|default:project.foreman.email }}</div>
+                        <small class="text-muted">Прораб</small>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Участники -->
+                {% for member in members %}
+                <div class="d-flex align-items-center mb-2">
+                    <div class="user-avatar me-3" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                        {{ member.user.first_name.0|default:member.user.email.0|upper }}
+                    </div>
+                    <div>
+                        <div class="small fw-bold">{{ member.user.get_full_name|default:member.user.email }}</div>
+                        <small class="text-muted">{{ member.get_role_display }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if can_manage %}
+                <div class="mt-3 pt-3 border-top">
+                    <a href="{% url 'projects:members' project.pk %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-person-plus me-1"></i>Управление командой
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Документы -->
+        {% if documents %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-text me-2"></i>Документы
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for document in documents %}
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                    <div class="flex-grow-1">
+                        <div class="small fw-bold">{{ document.name }}</div>
+                        <small class="text-muted">{{ document.get_document_type_display }}</small>
+                    </div>
+                    <a href="{{ document.file.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="bi bi-download"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- Модальное окно для генерации ключа доступа -->
+{% if can_manage %}
+<div class="modal fade" id="accessKeyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-key me-2"></i>Создать ключ доступа
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="accessKeyForm">
+                    <div class="mb-3">
+                        <label for="userEmail" class="form-label">Email пользователя (необязательно)</label>
+                        <input type="email" class="form-control" id="userEmail" placeholder="user@example.com">
+                        <div class="form-text">Если не указан, ключ может использовать любой пользователь</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expiresDays" class="form-label">Срок действия (дни)</label>
+                        <input type="number" class="form-control" id="expiresDays" value="30" min="1" max="365">
+                        <div class="form-text">Оставьте пустым для бессрочного ключа</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" onclick="createAccessKey()">Создать ключ</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if can_manage %}
+<script>
+function generateAccessKey() {
+    const modal = new bootstrap.Modal(document.getElementById('accessKeyModal'));
+    modal.show();
+}
+
+function copyKey(key) {
+    // Сначала пробуем современный API
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(key).then(() => {
+            showCopySuccess();
+        }).catch(err => {
+            console.error('Clipboard API failed: ', err);
+            fallbackCopyTextToClipboard(key);
+        });
+    } else {
+        // Fallback для старых браузеров или HTTP
+        fallbackCopyTextToClipboard(key);
+    }
+}
+
+function copyGeneratedKey() {
+    const keyInput = document.getElementById('generatedKey');
+    if (keyInput) {
+        const key = keyInput.value;
+        
+        // Для мобильных устройств - сначала выделяем текст
+        keyInput.select();
+        keyInput.setSelectionRange(0, 99999); // Для мобильных устройств
+        
+        // Пробуем скопировать
+        copyKey(key);
+    }
+}
+
+function selectKeyText() {
+    const keyInput = document.getElementById('generatedKey');
+    if (keyInput) {
+        keyInput.focus();
+        keyInput.select();
+        keyInput.setSelectionRange(0, 99999);
+        
+        // Показываем подсказку
+        showToast('Ключ выделен. Нажмите Ctrl+C (или долго нажмите и выберите "Копировать")', 'info');
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showCopySuccess();
+        } else {
+            showCopyError();
+        }
+    } catch (err) {
+        console.error('Fallback copy failed: ', err);
+        showCopyError();
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showCopySuccess() {
+    // Ищем кнопку копирования в активном модальном окне
+    const button = document.querySelector('.modal.show .btn-outline-secondary');
+    if (button) {
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="bi bi-check"></i> Скопировано!';
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('btn-success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+        }, 2000);
+    } else {
+        // Если кнопка не найдена, показываем toast
+        showToast('Ключ скопирован в буфер обмена!', 'success');
+    }
+}
+
+function showCopyError() {
+    showToast('Не удалось скопировать ключ. Скопируйте вручную.', 'warning');
+}
+
+function showToast(message, type = 'info') {
+    const bgClass = type === 'success' ? 'bg-success' : 
+                   type === 'warning' ? 'bg-warning' : 
+                   type === 'error' ? 'bg-danger' : 'bg-info';
+    
+    const icon = type === 'success' ? 'bi-check-circle' : 
+                type === 'warning' ? 'bi-exclamation-triangle' : 
+                type === 'error' ? 'bi-x-circle' : 'bi-info-circle';
+    
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white ${bgClass} border-0 position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="${icon} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+    bsToast.show();
+    
+    // Удаляем toast после скрытия
+    toast.addEventListener('hidden.bs.toast', () => {
+        if (document.body.contains(toast)) {
+            document.body.removeChild(toast);
+        }
+    });
+}
+
+function createAccessKey() {
+    const userEmail = document.getElementById('userEmail').value;
+    const expiresDays = document.getElementById('expiresDays').value;
+    
+    fetch('{% url "projects:generate_key" project.pk %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            user_email: userEmail,
+            expires_days: expiresDays ? parseInt(expiresDays) : null
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Создаем красивое модальное окно с результатом
+            const resultModal = document.createElement('div');
+            resultModal.className = 'modal fade';
+            resultModal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-check-circle me-2"></i>Ключ доступа создан!
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-info-circle me-2"></i>Ваш ключ доступа:</h6>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" id="generatedKey" value="${data.key}" readonly>
+                                    <button class="btn btn-outline-secondary" onclick="copyGeneratedKey()">
+                                        <i class="bi bi-copy"></i> Копировать
+                                    </button>
+                                </div>
+                                <div class="d-grid">
+                                    <button class="btn btn-outline-primary btn-sm" onclick="selectKeyText()">
+                                        <i class="bi bi-cursor-text"></i> Выделить для копирования вручную
+                                    </button>
+                                </div>
+                            </div>
+                            <p><strong>Что делать дальше:</strong></p>
+                            <ol>
+                                <li>Скопируйте ключ доступа</li>
+                                <li>Отправьте его сотруднику</li>
+                                <li>Сотрудник должен зайти в профиль и ввести ключ</li>
+                            </ol>
+                            ${data.expires_at ? `<p class="text-muted"><i class="bi bi-clock"></i> Ключ действует до: ${new Date(data.expires_at).toLocaleString('ru')}</p>` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Понятно</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(resultModal);
+            
+            // Закрываем текущий modal и показываем результат
+            bootstrap.Modal.getInstance(document.getElementById('accessKeyModal')).hide();
+            const newModal = new bootstrap.Modal(resultModal);
+            newModal.show();
+            
+            // Удаляем modal после закрытия
+            resultModal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(resultModal);
+            });
+        } else {
+            // Показываем ошибку в красивом виде
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger mt-3';
+            errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>${data.error || 'Ошибка при создании ключа'}`;
+            
+            // Удаляем предыдущие ошибки
+            const existingError = document.querySelector('#accessKeyModal .alert-danger');
+            if (existingError) existingError.remove();
+            
+            // Добавляем ошибку в modal
+            document.querySelector('#accessKeyModal .modal-body').appendChild(errorDiv);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при создании ключа');
+    });
+}
+</script>
+{% endif %}
+{% endblock %}

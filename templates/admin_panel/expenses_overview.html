@@ -1,0 +1,241 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block page_title %}Обзор расходов{% endblock %}
+{% block page_subtitle %}Мониторинг всех расходов в системе{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb breadcrumb-admin">
+        <li class="breadcrumb-item"><a href="{% url 'admin_panel:dashboard' %}">Главная</a></li>
+        <li class="breadcrumb-item active">Расходы</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    {% for status in status_stats %}
+    <div class="col-md-3">
+        <div class="stat-card 
+            {% if status.status == 'pending' %}stat-card-warning
+            {% elif status.status == 'approved' %}stat-card-success
+            {% elif status.status == 'rejected' %}stat-card-danger
+            {% else %}stat-card-primary
+            {% endif %}">
+            <div class="stat-number">{{ status.count }}</div>
+            <div class="stat-label">
+                {% if status.status == 'pending' %}
+                    <i class="bi bi-clock me-1"></i>Ожидает
+                {% elif status.status == 'in_review' %}
+                    <i class="bi bi-eye me-1"></i>На рассмотрении
+                {% elif status.status == 'approved' %}
+                    <i class="bi bi-check-circle me-1"></i>Одобрено
+                {% elif status.status == 'rejected' %}
+                    <i class="bi bi-x-circle me-1"></i>Отклонено
+                {% else %}
+                    <i class="bi bi-credit-card me-1"></i>Оплачено
+                {% endif %}
+            </div>
+            <div class="mt-1">
+                <small>{{ status.total_amount|floatformat:0 }}₽</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row">
+    <!-- Expenses by Type -->
+    <div class="col-md-6">
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-pie-chart me-2"></i>
+                    Расходы по типам
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for type_stat in type_stats %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            {% if type_stat.task_type == 'material' %}
+                                <i class="bi bi-box text-primary" style="font-size: 1.5rem;"></i>
+                            {% elif type_stat.task_type == 'labor' %}
+                                <i class="bi bi-person-gear text-success" style="font-size: 1.5rem;"></i>
+                            {% elif type_stat.task_type == 'transport' %}
+                                <i class="bi bi-truck text-warning" style="font-size: 1.5rem;"></i>
+                            {% elif type_stat.task_type == 'fuel' %}
+                                <i class="bi bi-fuel-pump text-danger" style="font-size: 1.5rem;"></i>
+                            {% elif type_stat.task_type == 'equipment' %}
+                                <i class="bi bi-tools text-info" style="font-size: 1.5rem;"></i>
+                            {% else %}
+                                <i class="bi bi-three-dots text-secondary" style="font-size: 1.5rem;"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold">
+                                {% if type_stat.task_type == 'material' %}Материалы
+                                {% elif type_stat.task_type == 'labor' %}Работы
+                                {% elif type_stat.task_type == 'transport' %}Транспорт
+                                {% elif type_stat.task_type == 'fuel' %}Топливо
+                                {% elif type_stat.task_type == 'equipment' %}Оборудование
+                                {% else %}Прочее
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ type_stat.count }} расход{{ type_stat.count|pluralize:",,ов" }}</small>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">{{ type_stat.total_amount|floatformat:0 }}₽</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-pie-chart" style="font-size: 2rem;"></i>
+                    <p class="mt-2 mb-0">Нет данных по типам расходов</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Expenses -->
+    <div class="col-md-6">
+        <div class="card admin-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock me-2"></i>
+                    Расходы на рассмотрении
+                </h5>
+            </div>
+            <div class="card-body">
+                <div style="max-height: 400px; overflow-y: auto;">
+                    {% for expense in pending_expenses %}
+                    <div class="d-flex justify-content-between align-items-start mb-3 pb-3 border-bottom">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">{{ expense.title }}</div>
+                            <small class="text-muted">
+                                <i class="bi bi-folder me-1"></i>{{ expense.project.name }}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                <i class="bi bi-person me-1"></i>{{ expense.created_by.get_full_name }}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold">{{ expense.amount|floatformat:0 }}₽</div>
+                            <small class="text-muted">{{ expense.created_at|date:"d.m H:i" }}</small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                        <p class="mt-2 mb-0">Нет расходов на рассмотрении</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Expenses -->
+<div class="card admin-card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-receipt me-2"></i>
+            Последние расходы
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-admin mb-0">
+                <thead>
+                    <tr>
+                        <th>Расход</th>
+                        <th>Проект</th>
+                        <th>Тип</th>
+                        <th>Сумма</th>
+                        <th>Статус</th>
+                        <th>Создал</th>
+                        <th>Дата</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in recent_expenses %}
+                    <tr>
+                        <td>
+                            <div>
+                                <div class="fw-bold">{{ expense.title }}</div>
+                                {% if expense.description %}
+                                <small class="text-muted">{{ expense.description|truncatechars:50 }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{% url 'projects:detail' expense.project.pk %}" class="text-decoration-none">
+                                {{ expense.project.name }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">
+                                {{ expense.get_task_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong>{{ expense.amount|floatformat:0 }}₽</strong>
+                        </td>
+                        <td>
+                            {% if expense.status == 'pending' %}
+                                <span class="badge bg-warning">Ожидает</span>
+                            {% elif expense.status == 'in_review' %}
+                                <span class="badge bg-info">На рассмотрении</span>
+                            {% elif expense.status == 'approved' %}
+                                <span class="badge bg-success">Одобрено</span>
+                            {% elif expense.status == 'rejected' %}
+                                <span class="badge bg-danger">Отклонено</span>
+                            {% else %}
+                                <span class="badge bg-primary">Оплачено</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar me-2" style="width: 25px; height: 25px; background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem;">
+                                    {{ expense.created_by.first_name.0|default:expense.created_by.email.0|upper }}
+                                </div>
+                                <small>{{ expense.created_by.get_full_name }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <small>{{ expense.created_at|date:"d.m.Y H:i" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'kanban:expense_detail' expense.pk %}" 
+                                   class="btn btn-sm btn-outline-primary" title="Просмотр">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'kanban:board' expense.project.pk %}" 
+                                   class="btn btn-sm btn-outline-info" title="К доске">
+                                    <i class="bi bi-kanban"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-receipt" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">Расходы не найдены</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Информация о ролях{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="bi bi-people me-2"></i>
+                Система ролей и прав доступа
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Администратор -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-primary shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Администратор
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Полномочия:</h6>
+                    <ul class="list-unstyled">
+                        <li>✅ Управление пользователями</li>
+                        <li>✅ Управление проектами</li>
+                        <li>✅ Просмотр всех проектов</li>
+                        <li>✅ Управление складом</li>
+                        <li>✅ Просмотр финансов</li>
+                        <li>✅ Управление сметами</li>
+                        <li>✅ Управление задачами</li>
+                        <li>✅ Контроль прорабов</li>
+                        <li>✅ Управление ценами</li>
+                        <li>✅ Полный доступ к складу</li>
+                    </ul>
+                    <div class="mt-3">
+                        <strong>Логин:</strong> admin@superpan.ru<br>
+                        <strong>Пароль:</strong> admin123
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Главный инженер -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-success shadow h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gear me-2"></i>
+                        Главный инженер
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Полномочия:</h6>
+                    <ul class="list-unstyled">
+                        <li>✅ Управление проектами</li>
+                        <li>✅ Просмотр всех проектов</li>
+                        <li>✅ Контроль прорабов</li>
+                        <li>✅ Управление ценами</li>
+                        <li>✅ Полный доступ к складу</li>
+                        <li>✅ Управление товарами склада</li>
+                        <li>✅ Просмотр отчетов склада</li>
+                        <li>✅ Управление фото оборудования</li>
+                        <li>✅ Просмотр финансов</li>
+                        <li>✅ Управление сметами</li>
+                        <li>✅ Управление задачами</li>
+                    </ul>
+                    <div class="mt-3">
+                        <strong>Логин:</strong> chief@superpan.ru<br>
+                        <strong>Пароль:</strong> chief123
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Прораб -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-warning shadow h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-hammer me-2"></i>
+                        Прораб
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Полномочия:</h6>
+                    <ul class="list-unstyled">
+                        <li>✅ Просмотр проектов</li>
+                        <li>✅ Управление задачами проекта</li>
+                        <li>✅ Просмотр сроков проекта</li>
+                        <li>✅ Просмотр бюджета проекта</li>
+                        <li>✅ Контроль склада</li>
+                        <li>✅ Управление товарами склада</li>
+                        <li>✅ Просмотр отчетов склада</li>
+                        <li>✅ Просмотр смет</li>
+                    </ul>
+                    <div class="mt-3">
+                        <strong>Логин:</strong> foreman@superpan.ru<br>
+                        <strong>Пароль:</strong> foreman123
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Кладовщик -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-info shadow h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-box-seam me-2"></i>
+                        Кладовщик
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Полномочия:</h6>
+                    <ul class="list-unstyled">
+                        <li>✅ Управление товарами склада</li>
+                        <li>✅ Просмотр отчетов склада</li>
+                        <li>✅ Управление фото оборудования</li>
+                        <li>✅ Создание транзакций</li>
+                        <li>✅ Контроль остатков</li>
+                        <li>❌ Просмотр проектов</li>
+                        <li>❌ Просмотр смет</li>
+                        <li>❌ Просмотр задач</li>
+                        <li>❌ Просмотр финансов</li>
+                    </ul>
+                    <div class="mt-3">
+                        <strong>Логин:</strong> keeper@superpan.ru<br>
+                        <strong>Пароль:</strong> keeper123
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Снабженец -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-secondary shadow h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-truck me-2"></i>
+                        Снабженец
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Полномочия:</h6>
+                    <ul class="list-unstyled">
+                        <li>✅ Управление товарами склада</li>
+                        <li>✅ Просмотр отчетов склада</li>
+                        <li>✅ Управление фото оборудования</li>
+                        <li>✅ Создание транзакций</li>
+                        <li>✅ Контроль остатков</li>
+                        <li>❌ Просмотр проектов</li>
+                        <li>❌ Просмотр смет</li>
+                        <li>❌ Просмотр задач</li>
+                        <li>❌ Просмотр финансов</li>
+                    </ul>
+                    <div class="mt-3">
+                        <strong>Логин:</strong> supplier@superpan.ru<br>
+                        <strong>Пароль:</strong> supplier123
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Подрядчик -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-warning shadow h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-workspace me-2"></i>
+                        Подрядчик
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Полномочия:</h6>
+                    <ul class="list-unstyled">
+                        <li>✅ Просмотр проектов</li>
+                        <li>✅ Просмотр задач</li>
+                        <li>✅ Просмотр сроков проекта</li>
+                        <li>❌ Управление проектами</li>
+                        <li>❌ Управление задачами</li>
+                        <li>❌ Просмотр смет</li>
+                        <li>❌ Просмотр склада</li>
+                        <li>❌ Просмотр финансов</li>
+                    </ul>
+                    <div class="mt-3">
+                        <strong>Логин:</strong> contractor@superpan.ru<br>
+                        <strong>Пароль:</strong> contractor123
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Принципы работы системы ролей
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Иерархия ролей:</h6>
+                            <ol>
+                                <li><strong>Администратор</strong> - полный доступ ко всем функциям</li>
+                                <li><strong>Главный инженер</strong> - контроль прорабов и управление складом</li>
+                                <li><strong>Прораб</strong> - управление задачами и контроль склада</li>
+                                <li><strong>Кладовщик/Снабженец</strong> - управление складом</li>
+                                <li><strong>Подрядчик</strong> - ограниченный доступ к проектам</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Безопасность:</h6>
+                            <ul>
+                                <li>Каждая роль имеет строго определенные права</li>
+                                <li>Финансовая информация доступна только администратору и главному инженеру</li>
+                                <li>Прораб не видит денежные суммы, только сроки</li>
+                                <li>Кладовщик и снабженец работают только со складом</li>
+                                <li>Все действия логируются</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

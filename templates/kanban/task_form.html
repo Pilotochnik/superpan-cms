@@ -1,0 +1,572 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{% if task %}Редактирование задачи{% else %}Создание задачи{% endif %} - {{ project.name }}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 30px;
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    
+    .form-section h5 {
+        color: #495057;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .form-section h5 i {
+        color: #007bff;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .help-text {
+        font-size: 0.85em;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .task-type-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 10px;
+    }
+    
+    .task-type-option {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .task-type-option:hover {
+        border-color: #007bff;
+        background: #f8f9ff;
+    }
+    
+    .task-type-option.selected {
+        border-color: #007bff;
+        background: #e3f2fd;
+    }
+    
+    .task-type-option i {
+        font-size: 2em;
+        color: #007bff;
+        margin-bottom: 10px;
+    }
+    
+    .priority-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .priority-option:hover {
+        background: #f8f9fa;
+    }
+    
+    .priority-option.selected {
+        border-color: #007bff;
+        background: #e3f2fd;
+    }
+    
+    .priority-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 0 1px #dee2e6;
+    }
+    
+    .category-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .category-option:hover {
+        background: #f8f9fa;
+    }
+    
+    .category-option.selected {
+        border-color: #007bff;
+        background: #e3f2fd;
+    }
+    
+    .category-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2em;
+    }
+    
+    .tags-input {
+        position: relative;
+    }
+    
+    .tags-display {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 10px;
+    }
+    
+    .tag-item {
+        background: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .tag-remove {
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    .datetime-input {
+        position: relative;
+    }
+    
+    .datetime-input i {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <!-- Заголовок -->
+        <div class="form-header">
+            <h2>
+                <i class="bi bi-{% if task %}pencil-square{% else %}plus-circle{% endif %} me-2"></i>
+                {% if task %}Редактирование задачи{% else %}Создание задачи{% endif %}
+            </h2>
+            <p class="text-muted mb-0">{{ project.name }}</p>
+        </div>
+
+        <form method="post" id="taskForm">
+            {% csrf_token %}
+            
+            <!-- Основная информация -->
+            <div class="form-section">
+                <h5><i class="bi bi-info-circle"></i>Основная информация</h5>
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label required-field">Название задачи</label>
+                            {{ form.title }}
+                            <div class="help-text">Краткое и понятное описание задачи</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Тип задачи</label>
+                            <div class="task-type-grid">
+                                {% for value, label in form.task_type.field.choices %}
+                                {% if value %}
+                                <div class="task-type-option" data-value="{{ value }}">
+                                    <i class="bi bi-{% if value == 'purchase' %}cart{% elif value == 'work' %}hammer{% elif value == 'delivery' %}truck{% elif value == 'installation' %}tools{% elif value == 'control' %}check-circle{% elif value == 'documentation' %}file-text{% else %}three-dots{% endif %}"></i>
+                                    <div>{{ label }}</div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            {{ form.task_type }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Описание</label>
+                    {{ form.description }}
+                    <div class="help-text">Подробное описание задачи, требования, технические детали</div>
+                </div>
+            </div>
+
+            <!-- Классификация -->
+            <div class="form-section">
+                <h5><i class="bi bi-tags"></i>Классификация</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Категория</label>
+                            <div class="category-options">
+                                {% for category in form.category.field.queryset %}
+                                <div class="category-option" data-value="{{ category.id }}">
+                                    <div class="category-icon" style="background-color: {{ category.color }}">
+                                        <i class="{{ category.icon }}"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ category.name }}</div>
+                                        <div class="text-muted small">{{ category.description|truncatechars:50 }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {{ form.category }}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Приоритет</label>
+                            <div class="priority-options">
+                                {% for priority in form.priority.field.queryset %}
+                                <div class="priority-option" data-value="{{ priority.id }}">
+                                    <div class="priority-color" style="background-color: {{ priority.color }}"></div>
+                                    <div>
+                                        <div class="fw-bold">{{ priority.name }}</div>
+                                        <div class="text-muted small">Уровень {{ priority.level }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {{ form.priority }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Теги</label>
+                    <div class="tags-input">
+                        <input type="text" class="form-control" id="tagsInput" placeholder="Введите тег и нажмите Enter">
+                        <div class="help-text">Введите теги через запятую или добавляйте по одному</div>
+                        <div class="tags-display" id="tagsDisplay"></div>
+                    </div>
+                    {{ form.tags }}
+                </div>
+            </div>
+
+            <!-- Назначение и сроки -->
+            <div class="form-section">
+                <h5><i class="bi bi-people"></i>Назначение и сроки</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Исполнитель</label>
+                            {{ form.assigned_to }}
+                            <div class="help-text">Кому будет назначена задача</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Срок выполнения</label>
+                            <div class="datetime-input">
+                                {{ form.due_date }}
+                                <i class="bi bi-calendar"></i>
+                            </div>
+                            <div class="help-text">Когда задача должна быть выполнена</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ресурсы -->
+            <div class="form-section">
+                <h5><i class="bi bi-graph-up"></i>Ресурсы</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Планируемые часы</label>
+                            {{ form.estimated_hours }}
+                            <div class="help-text">Сколько часов планируется на выполнение</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Бюджет</label>
+                            {{ form.budget }}
+                            <div class="help-text">Планируемый бюджет на задачу (₽)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Дополнительные настройки -->
+            <div class="form-section">
+                <h5><i class="bi bi-gear"></i>Дополнительные настройки</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check mb-3">
+                            {{ form.is_urgent }}
+                            <label class="form-check-label" for="{{ form.is_urgent.id_for_label }}">
+                                Срочная задача
+                            </label>
+                            <div class="help-text">Пометить задачу как срочную</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-check mb-3">
+                            {{ form.is_blocked }}
+                            <label class="form-check-label" for="{{ form.is_blocked.id_for_label }}">
+                                Заблокирована
+                            </label>
+                            <div class="help-text">Задача заблокирована и не может выполняться</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3" id="blockReasonField" style="display: none;">
+                    <label class="form-label">Причина блокировки</label>
+                    {{ form.block_reason }}
+                    <div class="help-text">Укажите причину блокировки задачи</div>
+                </div>
+            </div>
+
+            <!-- Действия -->
+            <div class="form-actions">
+                <a href="{% url 'kanban:task_board' project.id %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Отмена
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>
+                    {% if task %}Сохранить изменения{% else %}Создать задачу{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация выбора типа задачи
+    initTaskTypeSelection();
+    
+    // Инициализация выбора категории
+    initCategorySelection();
+    
+    // Инициализация выбора приоритета
+    initPrioritySelection();
+    
+    // Инициализация тегов
+    initTagsInput();
+    
+    // Обработка блокировки
+    initBlockReasonToggle();
+});
+
+function initTaskTypeSelection() {
+    const options = document.querySelectorAll('.task-type-option');
+    const hiddenInput = document.querySelector('#id_task_type');
+    
+    options.forEach(option => {
+        option.addEventListener('click', function() {
+            // Убираем выделение с других опций
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Выделяем текущую опцию
+            this.classList.add('selected');
+            
+            // Устанавливаем значение в скрытое поле
+            hiddenInput.value = this.dataset.value;
+        });
+    });
+    
+    // Выделяем текущее значение
+    if (hiddenInput.value) {
+        const selectedOption = document.querySelector(`[data-value="${hiddenInput.value}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add('selected');
+        }
+    }
+}
+
+function initCategorySelection() {
+    const options = document.querySelectorAll('.category-option');
+    const hiddenInput = document.querySelector('#id_category');
+    
+    options.forEach(option => {
+        option.addEventListener('click', function() {
+            // Убираем выделение с других опций
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Выделяем текущую опцию
+            this.classList.add('selected');
+            
+            // Устанавливаем значение в скрытое поле
+            hiddenInput.value = this.dataset.value;
+        });
+    });
+    
+    // Выделяем текущее значение
+    if (hiddenInput.value) {
+        const selectedOption = document.querySelector(`[data-value="${hiddenInput.value}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add('selected');
+        }
+    }
+}
+
+function initPrioritySelection() {
+    const options = document.querySelectorAll('.priority-option');
+    const hiddenInput = document.querySelector('#id_priority');
+    
+    options.forEach(option => {
+        option.addEventListener('click', function() {
+            // Убираем выделение с других опций
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Выделяем текущую опцию
+            this.classList.add('selected');
+            
+            // Устанавливаем значение в скрытое поле
+            hiddenInput.value = this.dataset.value;
+        });
+    });
+    
+    // Выделяем текущее значение
+    if (hiddenInput.value) {
+        const selectedOption = document.querySelector(`[data-value="${hiddenInput.value}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add('selected');
+        }
+    }
+}
+
+function initTagsInput() {
+    const tagsInput = document.getElementById('tagsInput');
+    const tagsDisplay = document.getElementById('tagsDisplay');
+    const hiddenInput = document.querySelector('#id_tags');
+    let tags = [];
+    
+    // Загружаем существующие теги
+    if (hiddenInput.value) {
+        tags = hiddenInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+        updateTagsDisplay();
+    }
+    
+    tagsInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTag(this.value.trim());
+            this.value = '';
+        }
+    });
+    
+    tagsInput.addEventListener('blur', function() {
+        if (this.value.trim()) {
+            addTag(this.value.trim());
+            this.value = '';
+        }
+    });
+    
+    function addTag(tag) {
+        if (tag && !tags.includes(tag)) {
+            tags.push(tag);
+            updateTagsDisplay();
+            updateHiddenInput();
+        }
+    }
+    
+    function removeTag(tag) {
+        tags = tags.filter(t => t !== tag);
+        updateTagsDisplay();
+        updateHiddenInput();
+    }
+    
+    function updateTagsDisplay() {
+        tagsDisplay.innerHTML = tags.map(tag => `
+            <div class="tag-item">
+                ${tag}
+                <span class="tag-remove" onclick="removeTag('${tag}')">&times;</span>
+            </div>
+        `).join('');
+    }
+    
+    function updateHiddenInput() {
+        hiddenInput.value = tags.join(', ');
+    }
+    
+    // Делаем функции глобальными для onclick
+    window.removeTag = removeTag;
+}
+
+function initBlockReasonToggle() {
+    const blockedCheckbox = document.querySelector('#id_is_blocked');
+    const blockReasonField = document.getElementById('blockReasonField');
+    
+    function toggleBlockReason() {
+        if (blockedCheckbox.checked) {
+            blockReasonField.style.display = 'block';
+        } else {
+            blockReasonField.style.display = 'none';
+        }
+    }
+    
+    blockedCheckbox.addEventListener('change', toggleBlockReason);
+    toggleBlockReason(); // Инициализация
+}
+</script>
+{% endblock %}

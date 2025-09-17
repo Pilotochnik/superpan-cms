@@ -1,0 +1,573 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Детализированная смета - {{ project.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .estimate-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .estimate-summary {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 2rem;
+    }
+    
+    .estimate-item {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-left: 4px solid #007bff;
+        transition: all 0.2s;
+    }
+    
+    .estimate-item:hover {
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .rate-code {
+        font-family: 'Courier New', monospace;
+        background: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+    
+    .price-highlight {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+    
+    .add-item-btn {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .add-item-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+    
+    .search-box {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .rate-item {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .rate-item:hover {
+        border-color: #007bff;
+        box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+    }
+    
+    .rate-item.selected {
+        border-color: #28a745;
+        background: #f8fff9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-calculator me-2"></i>Детализированная смета
+                    </h2>
+                    <p class="text-muted mb-0">{{ project.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'projects:detail' project.pk %}" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-arrow-left me-1"></i>Назад к проекту
+                    </a>
+                    <a href="{% url 'projects:estimate' project.pk %}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-graph-up me-1"></i>Простая смета
+                    </a>
+                    {% if can_edit %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                        <i class="bi bi-plus-circle me-1"></i>Добавить позицию
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сводка по смете -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="estimate-summary">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="mb-1 text-primary">{{ estimate.total_amount|floatformat:0 }} ₽</h4>
+                            <small class="text-muted">Общая сумма</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="mb-1 text-info">{{ estimate.labor_amount|floatformat:0 }} ₽</h4>
+                            <small class="text-muted">Труд</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="mb-1 text-warning">{{ estimate.material_amount|floatformat:0 }} ₽</h4>
+                            <small class="text-muted">Материалы</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="mb-1 text-secondary">{{ estimate.equipment_amount|floatformat:0 }} ₽</h4>
+                            <small class="text-muted">Оборудование</small>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h5 class="mb-1 text-success">{{ estimate.overhead_amount|floatformat:0 }} ₽</h5>
+                            <small class="text-muted">Накладные расходы ({{ estimate.overhead_percent }}%)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h5 class="mb-1 text-danger">{{ estimate.profit_amount|floatformat:0 }} ₽</h5>
+                            <small class="text-muted">Прибыль ({{ estimate.profit_percent }}%)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h5 class="mb-1 text-dark">{{ total_labor_hours|floatformat:1 }} ч</h5>
+                            <small class="text-muted">Трудозатраты</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Позиции сметы -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>Позиции сметы
+                    </h5>
+                    <div>
+                        <span class="badge bg-primary me-2">{{ total_items }} позиций</span>
+                        <span class="badge bg-success">{{ total_quantity|floatformat:1 }} {{ estimate.items.first.rate.unit.short_name|default:"ед." }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for item in items %}
+                    <div class="estimate-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-1">
+                                <span class="badge bg-secondary">{{ forloop.counter }}</span>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="rate-code mb-1">{{ item.rate.code }}</div>
+                                <h6 class="mb-1">{{ item.rate.name }}</h6>
+                                <small class="text-muted">{{ item.rate.category.name }}</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <div class="mb-1">
+                                    <strong>{{ item.quantity|floatformat:3 }}</strong>
+                                    <small class="text-muted"> {{ item.rate.unit.short_name }}</small>
+                                </div>
+                                <small class="text-muted">Количество</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <div class="mb-1">
+                                    <strong>{{ item.unit_price|floatformat:2 }} ₽</strong>
+                                </div>
+                                <small class="text-muted">Цена за ед.</small>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <div class="price-highlight">{{ item.total_price|floatformat:2 }} ₽</div>
+                                <small class="text-muted">Общая стоимость</small>
+                            </div>
+                            <div class="col-md-1 text-center">
+                                {% if can_edit %}
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="removeItem({{ item.id }})"
+                                        title="Удалить позицию">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if item.notes %}
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    <i class="bi bi-chat-left-text me-1"></i>{{ item.notes }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-inbox display-4"></i>
+                        <p class="mt-2">Позиции сметы еще не добавлены</p>
+                        {% if can_edit %}
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                            <i class="bi bi-plus-circle me-1"></i>Добавить первую позицию
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления позиции -->
+{% if can_edit %}
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Добавить позицию в смету
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Поиск расценок -->
+                <div class="search-box">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">Поиск расценок</label>
+                            <input type="text" class="form-control" id="rateSearch" 
+                                   placeholder="Введите код (01-001) или название (кирпич, фундамент)...">
+                            <div class="form-text">
+                                <strong>Примеры поиска:</strong><br>
+                                • По коду: <code>01-001</code>, <code>02-003</code>, <code>06-001</code><br>
+                                • По названию: <code>кирпич</code>, <code>фундамент</code>, <code>штукатурка</code><br>
+                                • По типу: <code>кладка</code>, <code>устройство</code>, <code>отделка</code>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Категория работ</label>
+                            <select class="form-select" id="categoryFilter">
+                                <option value="">Все категории</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Список расценок -->
+                <div id="ratesList" style="max-height: 400px; overflow-y: auto;">
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-search"></i>
+                        <p class="mt-2">Введите код или название работы для поиска</p>
+                    </div>
+                </div>
+                
+                <!-- Форма добавления -->
+                <div id="addItemForm" style="display: none;">
+                    <hr>
+                    <h6>Параметры позиции:</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Количество</label>
+                            <input type="number" class="form-control" id="itemQuantity" 
+                                   step="0.001" min="0.001" value="1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Региональный коэффициент</label>
+                            <input type="number" class="form-control" id="regionFactor" 
+                                   step="0.01" min="0.01" max="3.00" value="1.00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Коэффициент сложности</label>
+                            <input type="number" class="form-control" id="complexityFactor" 
+                                   step="0.01" min="0.01" max="5.00" value="1.00">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Примечания</label>
+                            <textarea class="form-control" id="itemNotes" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mt-4">
+                                <div class="d-flex justify-content-between">
+                                    <span>Цена за единицу:</span>
+                                    <strong id="unitPrice">0.00 ₽</strong>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Общая стоимость:</span>
+                                    <strong class="text-success" id="totalPrice">0.00 ₽</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="addItemBtn" disabled>
+                    <i class="bi bi-check me-1"></i>Добавить позицию
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedRate = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Загружаем расценки при открытии модального окна
+    $('#addItemModal').on('show.bs.modal', function() {
+        // Показываем все расценки при открытии
+        $('#rateSearch').val('');
+        $('#categoryFilter').val('');
+        loadRates();
+    });
+    
+    // Поиск расценок
+    $('#rateSearch').on('input', function() {
+        loadRates();
+    });
+    
+    // Фильтр по категории
+    $('#categoryFilter').on('change', function() {
+        loadRates();
+    });
+    
+    // Выбор расценки
+    $(document).on('click', '.rate-item', function() {
+        $('.rate-item').removeClass('selected');
+        $(this).addClass('selected');
+        
+        selectedRate = {
+            id: $(this).data('rate-id'),
+            name: $(this).data('rate-name'),
+            code: $(this).data('rate-code'),
+            base_price: $(this).data('rate-price'),
+            unit: $(this).data('rate-unit')
+        };
+        
+        $('#addItemForm').show();
+        $('#addItemBtn').prop('disabled', false);
+        calculatePrice();
+    });
+    
+    // Расчет стоимости
+    $('#itemQuantity, #regionFactor, #complexityFactor').on('input', function() {
+        calculatePrice();
+    });
+    
+    // Добавление позиции
+    $('#addItemBtn').on('click', function() {
+        addItem();
+    });
+});
+
+function loadRates() {
+    const searchQuery = $('#rateSearch').val();
+    const categoryId = $('#categoryFilter').val();
+    
+    // Показываем индикатор загрузки
+    $('#ratesList').html(`
+        <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p class="mt-2 text-muted">Поиск расценок...</p>
+        </div>
+    `);
+    
+    $.ajax({
+        url: '{% url "projects:estimate_rates_list" %}',
+        method: 'GET',
+        data: {
+            search_query: searchQuery || '',
+            category: categoryId || ''
+        },
+        success: function(data) {
+            // Парсим HTML ответ и извлекаем только карточки расценок
+            const $response = $(data);
+            const ratesCards = $response.find('.rate-card');
+            
+            if (ratesCards.length > 0) {
+                let html = '';
+                ratesCards.each(function() {
+                    const $card = $(this);
+                    const rateId = $card.data('rate-id');
+                    const rateName = $card.data('rate-name');
+                    const rateCode = $card.data('rate-code');
+                    const ratePrice = $card.data('rate-price');
+                    const rateUnit = $card.data('rate-unit');
+                    
+                    if (rateId) {
+                        html += `
+                            <div class="rate-item" data-rate-id="${rateId}" data-rate-name="${rateName}" data-rate-code="${rateCode}" data-rate-price="${ratePrice}" data-rate-unit="${rateUnit}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="rate-code mb-1">${rateCode}</div>
+                                        <h6 class="mb-1">${rateName}</h6>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="price-highlight">${ratePrice} ₽</div>
+                                        <small class="text-muted">${rateUnit}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                $('#ratesList').html(html);
+            } else {
+                $('#ratesList').html(`
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-search"></i>
+                        <p class="mt-2">Расценки не найдены</p>
+                        <p>Попробуйте изменить параметры поиска</p>
+                    </div>
+                `);
+            }
+        },
+        error: function() {
+            $('#ratesList').html(`
+                <div class="text-center text-danger py-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p class="mt-2">Ошибка загрузки расценок</p>
+                </div>
+            `);
+        }
+    });
+}
+
+function calculatePrice() {
+    if (!selectedRate) return;
+    
+    const quantity = parseFloat($('#itemQuantity').val()) || 0;
+    const regionFactor = parseFloat($('#regionFactor').val()) || 1;
+    const complexityFactor = parseFloat($('#complexityFactor').val()) || 1;
+    
+    $.ajax({
+        url: '{% url "projects:calculate_estimate_cost" %}',
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify({
+            rate_id: selectedRate.id,
+            quantity: quantity,
+            region_factor: regionFactor,
+            complexity_factor: complexityFactor
+        }),
+        success: function(data) {
+            if (data.success) {
+                $('#unitPrice').text(data.unit_price + ' ₽');
+                $('#totalPrice').text(data.total_price + ' ₽');
+            }
+        }
+    });
+}
+
+function addItem() {
+    if (!selectedRate) return;
+    
+    const quantity = parseFloat($('#itemQuantity').val()) || 0;
+    const regionFactor = parseFloat($('#regionFactor').val()) || 1;
+    const complexityFactor = parseFloat($('#complexityFactor').val()) || 1;
+    const notes = $('#itemNotes').val();
+    
+    $.ajax({
+        url: '{% url "projects:add_estimate_item" project.pk %}',
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+        data: JSON.stringify({
+            rate_id: selectedRate.id,
+            quantity: quantity,
+            region_factor: regionFactor,
+            complexity_factor: complexityFactor,
+            notes: notes
+        }),
+        success: function(data) {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        },
+        error: function() {
+            alert('Ошибка при добавлении позиции');
+        }
+    });
+}
+
+function removeItem(itemId) {
+    if (!confirm('Удалить эту позицию из сметы?')) return;
+    
+    $.ajax({
+        url: '{% url "projects:remove_estimate_item" project.pk 0 %}'.replace('0', itemId),
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        success: function(data) {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        },
+        error: function() {
+            alert('Ошибка при удалении позиции');
+        }
+    });
+}
+</script>
+{% endblock %}

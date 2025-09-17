@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Список задач - {{ project.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .task-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: all 0.2s ease;
+        border-left: 4px solid #e9ecef;
+    }
+    
+    .task-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .task-card.urgent {
+        border-left-color: #dc3545;
+    }
+    
+    .task-card.blocked {
+        background: #f8d7da;
+        opacity: 0.8;
+    }
+    
+    .task-header {
+        display: flex;
+        justify-content: between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    
+    .task-title {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .task-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+        color: #666;
+    }
+    
+    .task-description {
+        color: #666;
+        margin-bottom: 15px;
+        line-height: 1.5;
+    }
+    
+    .task-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 15px;
+    }
+    
+    .task-tag {
+        background: #e9ecef;
+        color: #495057;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+    }
+    
+    .task-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .task-assignee {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .assignee-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #007bff;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9em;
+        font-weight: bold;
+    }
+    
+    .task-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+    
+    .priority-badge {
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.75em;
+        font-weight: bold;
+    }
+    
+    .filters {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stats {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 10px;
+    }
+    
+    .stat-number {
+        font-size: 2em;
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4em;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .sort-options {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .sort-options select {
+        min-width: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="bi bi-list-task me-2"></i>Список задач</h2>
+                    <p class="text-muted mb-0">{{ project.name }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'kanban:task_board' project.id %}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-kanban me-1"></i>Канбан-доска
+                    </a>
+                    <a href="{% url 'kanban:create_task' project.id %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Создать задачу
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="stats">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ tasks.paginator.count }}</div>
+                    <div class="stat-label">Всего задач</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number text-success">{{ tasks|length }}</div>
+                    <div class="stat-label">На странице</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number text-warning">0</div>
+                    <div class="stat-label">Просрочено</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number text-danger">0</div>
+                    <div class="stat-label">Срочных</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры и сортировка -->
+    <div class="filters">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Поиск</label>
+                {{ search_form.search_query }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Категория</label>
+                {{ search_form.category }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Приоритет</label>
+                {{ search_form.priority }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Статус</label>
+                {{ search_form.status }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Исполнитель</label>
+                {{ search_form.assigned_to }}
+            </div>
+            <div class="col-md-1">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary d-block w-100">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="form-check">
+                    {{ search_form.is_urgent }}
+                    <label class="form-check-label" for="{{ search_form.is_urgent.id_for_label }}">
+                        Только срочные
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check">
+                    {{ search_form.is_overdue }}
+                    <label class="form-check-label" for="{{ search_form.is_overdue.id_for_label }}">
+                        Только просроченные
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="sort-options">
+                    <label class="form-label me-2">Сортировка:</label>
+                    <select class="form-select" name="sort" onchange="this.form.submit()">
+                        <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>По дате создания (новые)</option>
+                        <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>По дате создания (старые)</option>
+                        <option value="title" {% if sort_by == 'title' %}selected{% endif %}>По названию</option>
+                        <option value="-due_date" {% if sort_by == '-due_date' %}selected{% endif %}>По сроку (ближайшие)</option>
+                        <option value="due_date" {% if sort_by == 'due_date' %}selected{% endif %}>По сроку (дальние)</option>
+                        <option value="-priority__level" {% if sort_by == '-priority__level' %}selected{% endif %}>По приоритету</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список задач -->
+    <div class="row">
+        <div class="col-12">
+            {% if tasks %}
+                {% for task in tasks %}
+                <div class="task-card {% if task.is_urgent %}urgent{% endif %} {% if task.is_blocked %}blocked{% endif %}">
+                    <div class="task-header">
+                        <div class="flex-grow-1">
+                            <div class="task-title">
+                                <a href="{% url 'kanban:task_detail' project.id task.id %}" class="text-decoration-none">
+                                    {{ task.title }}
+                                </a>
+                            </div>
+                            <div class="task-meta">
+                                <span><i class="bi bi-calendar me-1"></i>{{ task.created_at|date:"d.m.Y H:i" }}</span>
+                                {% if task.due_date %}
+                                <span class="{% if task.is_overdue %}text-danger{% endif %}">
+                                    <i class="bi bi-clock me-1"></i>Срок: {{ task.due_date|date:"d.m.Y H:i" }}
+                                </span>
+                                {% endif %}
+                                {% if task.estimated_hours %}
+                                <span><i class="bi bi-hourglass me-1"></i>{{ task.estimated_hours }}ч</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if task.status %}
+                            <span class="status-badge" style="background-color: {{ task.status.color }}; color: white;">
+                                {{ task.status.name }}
+                            </span>
+                            {% endif %}
+                            {% if task.priority %}
+                            <span class="priority-badge" style="background-color: {{ task.priority.color }}; color: white;">
+                                {{ task.priority.name }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if task.description %}
+                    <div class="task-description">
+                        {{ task.description|truncatechars:200 }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if task.tags %}
+                    <div class="task-tags">
+                        {% for tag in task.tags|split:"," %}
+                        <span class="task-tag">{{ tag|strip }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="task-footer">
+                        <div class="task-assignee">
+                            {% if task.assigned_to %}
+                            <div class="assignee-avatar">
+                                {{ task.assigned_to.first_name|first|upper }}{{ task.assigned_to.last_name|first|upper }}
+                            </div>
+                            <span>{{ task.assigned_to.get_full_name }}</span>
+                            {% else %}
+                            <span class="text-muted">Не назначено</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="task-actions">
+                            <a href="{% url 'kanban:task_detail' project.id task.id %}" 
+                               class="btn btn-sm btn-outline-primary" title="Открыть">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if task.can_user_edit:user %}
+                            <a href="{% url 'kanban:edit_task' project.id task.id %}" 
+                               class="btn btn-sm btn-outline-secondary" title="Редактировать">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <!-- Пагинация -->
+                {% if tasks.has_other_pages %}
+                <nav aria-label="Пагинация задач">
+                    <ul class="pagination justify-content-center">
+                        {% if tasks.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ tasks.previous_page_number }}{% if request.GET.search_query %}&search_query={{ request.GET.search_query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.assigned_to %}&assigned_to={{ request.GET.assigned_to }}{% endif %}{% if request.GET.is_urgent %}&is_urgent=on{% endif %}{% if request.GET.is_overdue %}&is_overdue=on{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Предыдущая</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in tasks.paginator.page_range %}
+                        {% if tasks.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > tasks.number|add:'-3' and num < tasks.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.search_query %}&search_query={{ request.GET.search_query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.assigned_to %}&assigned_to={{ request.GET.assigned_to }}{% endif %}{% if request.GET.is_urgent %}&is_urgent=on{% endif %}{% if request.GET.is_overdue %}&is_overdue=on{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if tasks.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ tasks.next_page_number }}{% if request.GET.search_query %}&search_query={{ request.GET.search_query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.assigned_to %}&assigned_to={{ request.GET.assigned_to }}{% endif %}{% if request.GET.is_urgent %}&is_urgent=on{% endif %}{% if request.GET.is_overdue %}&is_overdue=on{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">Следующая</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h4>Задач не найдено</h4>
+                <p>Попробуйте изменить параметры поиска или создайте новую задачу</p>
+                <a href="{% url 'kanban:create_task' project.id %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Создать первую задачу
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

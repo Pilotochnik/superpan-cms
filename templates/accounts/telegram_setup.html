@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Настройка Telegram{% endblock %}
+
+{% block extra_css %}
+<style>
+    .setup-container {
+        background: #f8f9fa;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .setup-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 40px auto;
+    }
+    
+    .step {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-left: 4px solid #007bff;
+    }
+    
+    .step-number {
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+    }
+    
+    .code-block {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        margin: 10px 0;
+        overflow-x: auto;
+    }
+    
+    .telegram-link {
+        background: #0088cc;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        display: inline-block;
+        margin: 10px 0;
+        font-weight: 600;
+    }
+    
+    .telegram-link:hover {
+        background: #006699;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="setup-container">
+    <div class="setup-card">
+        <h1 class="text-center mb-4">
+            <i class="bi bi-telegram text-primary"></i>
+            Настройка Telegram авторизации
+        </h1>
+        
+        <div class="alert alert-info">
+            <strong>Внимание!</strong> Для работы авторизации через Telegram необходимо создать бота.
+        </div>
+        
+        <div class="step">
+            <h3>
+                <span class="step-number">1</span>
+                Создание бота
+            </h3>
+            <p>Перейдите к @BotFather в Telegram и создайте нового бота:</p>
+            <a href="https://t.me/botfather" class="telegram-link" target="_blank">
+                <i class="bi bi-telegram"></i>
+                Открыть @BotFather
+            </a>
+            <ul class="mt-3">
+                <li>Отправьте команду <code>/newbot</code></li>
+                <li>Введите имя бота (например: "Construction Manager Bot")</li>
+                <li>Введите username бота (например: "construction_manager_bot")</li>
+                <li>Скопируйте полученный токен</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h3>
+                <span class="step-number">2</span>
+                Настройка через команду
+            </h3>
+            <p>Выполните команду с вашими данными:</p>
+            <div class="code-block">
+python manage.py setup_telegram_bot --token YOUR_BOT_TOKEN --username YOUR_BOT_USERNAME
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>
+                <span class="step-number">3</span>
+                Настройка через .env файл
+            </h3>
+            <p>Или добавьте настройки в .env файл:</p>
+            <div class="code-block">
+TELEGRAM_BOT_TOKEN=ваш_токен_бота
+TELEGRAM_BOT_USERNAME=имя_вашего_бота
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>
+                <span class="step-number">4</span>
+                Перезапуск сервера
+            </h3>
+            <p>После настройки перезапустите сервер:</p>
+            <div class="code-block">
+python manage.py runserver
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>
+                <span class="step-number">5</span>
+                Тестирование
+            </h3>
+            <p>Перейдите на страницу авторизации и попробуйте войти через Telegram:</p>
+            <a href="{% url 'accounts:telegram_login' %}" class="btn btn-primary">
+                <i class="bi bi-telegram"></i>
+                Попробовать авторизацию
+            </a>
+        </div>
+        
+        <div class="alert alert-warning mt-4">
+            <strong>Важно!</strong> Убедитесь, что username бота указан без символа @ (например: "my_bot", а не "@my_bot").
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'accounts:telegram_login' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Назад к обычному входу
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
