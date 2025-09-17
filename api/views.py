@@ -1,7 +1,9 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.types import OpenApiTypes
 from projects.models import Project
 from kanban.models import ExpenseItem
 from warehouse.models import WarehouseItem
@@ -9,6 +11,32 @@ from warehouse.models import WarehouseItem
 User = get_user_model()
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="Список проектов",
+        description="Получить список всех доступных проектов пользователя"
+    ),
+    retrieve=extend_schema(
+        summary="Детали проекта",
+        description="Получить подробную информацию о проекте"
+    ),
+    create=extend_schema(
+        summary="Создать проект",
+        description="Создать новый проект"
+    ),
+    update=extend_schema(
+        summary="Обновить проект",
+        description="Обновить информацию о проекте"
+    ),
+    destroy=extend_schema(
+        summary="Удалить проект",
+        description="Удалить проект"
+    ),
+    stats=extend_schema(
+        summary="Статистика проекта",
+        description="Получить статистику по задачам проекта"
+    )
+)
 class ProjectViewSet(viewsets.ModelViewSet):
     """API для управления проектами"""
     queryset = Project.objects.all()

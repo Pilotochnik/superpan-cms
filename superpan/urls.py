@@ -20,6 +20,18 @@ urlpatterns = [
     path('kanban/', include('kanban.urls')),
     path('warehouse/', include('warehouse.urls')),
     path('api/', include('api.urls')),
+    
+    # API Documentation
+    path('api/schema/', include('drf_spectacular.urls')),
+    path('api/docs/', TemplateView.as_view(
+        template_name='drf_spectacular/swagger_ui.html',
+        extra_context={'schema_url': 'api:schema'}
+    ), name='swagger-ui'),
+    path('api/redoc/', TemplateView.as_view(
+        template_name='drf_spectacular/redoc.html',
+        extra_context={'schema_url': 'api:schema'}
+    ), name='redoc'),
+    
     path('app/', TemplateView.as_view(template_name='react_app.html'), name='react_app'),
     path('', LoginView.as_view(), name='login'),  # Root redirects to login
 ]

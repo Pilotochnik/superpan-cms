@@ -29,8 +29,12 @@ def dashboard(request):
         messages.error(request, 'Доступ запрещен. Только суперпользователи могут просматривать главную панель.')
         return redirect('accounts:profile')
     
-    # Получаем проекты в зависимости от роли пользователя
-    projects = user.get_accessible_projects()
+    # Получаем проекты в зависимости от роли пользователя с оптимизацией
+    projects = user.get_accessible_projects().select_related('created_by').prefetch_related(
+        'members__user',
+        'projectestimate_set',
+        'expense_items'
+    )
     
     # Статистика
     total_projects = projects.count()
