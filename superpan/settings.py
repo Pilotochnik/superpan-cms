@@ -68,6 +68,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'telegram_bot.middleware.TelegramWebhookSecurityMiddleware',  # Безопасность webhook
     'accounts.telegram_middleware.TelegramAuthMiddleware',  # Telegram авторизация
     'accounts.telegram_middleware.TelegramBotMiddleware',   # Telegram бот интеграция
     'accounts.middleware.DeviceTrackingMiddleware',  # Device binding security
@@ -226,6 +227,37 @@ SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'  # Изменено на Lax для мобильных устройств
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Telegram Webhook Security
+TELEGRAM_WEBHOOK_SECRET = config('TELEGRAM_WEBHOOK_SECRET', default='')
+
+# Sentry Configuration
+SENTRY_DSN = config('SENTRY_DSN', default='')
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration
+    
+    sentry_logging = LoggingIntegration(
+        level=logging.INFO,        # Capture info and above as breadcrumbs
+        event_level=logging.ERROR  # Send errors as events
+    )
+    
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(
+                transaction_style='url',
+                middleware_spans=True,
+                signals_spans=True,
+                cache_spans=True,
+            ),
+            sentry_logging,
+        ],
+        traces_sample_rate=0.1 if DEBUG else 0.05,  # Lower sampling in production
+        send_default_pii=False,  # Don't send personally identifiable information
+        environment='development' if DEBUG else 'production',
+    )
 SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 hours
 
 # CSRF settings

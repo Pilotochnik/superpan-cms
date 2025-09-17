@@ -363,11 +363,11 @@ class ConstructionBot:
         """Команда /projects - показать проекты пользователя"""
         try:
             telegram_user = await sync_to_async(TelegramUser.objects.get)(telegram_id=update.effective_user.id)
-            user = await sync_to_async(lambda: telegram_user.user)()
-            user_role = await sync_to_async(lambda: user.role)()
+            user = telegram_user.user
+            user_role = user.role
             
             # Получаем проекты через метод get_accessible_projects()
-            projects = await sync_to_async(list)(user.get_accessible_projects().order_by('-created_at')[:10])
+            projects = await sync_to_async(lambda: list(user.get_accessible_projects().order_by('-created_at')[:10]))()
             
             if not projects:
                 role_text = {
@@ -450,8 +450,8 @@ class ConstructionBot:
         """Команда /tasks - показать задачи пользователя"""
         try:
             telegram_user = await sync_to_async(TelegramUser.objects.get)(telegram_id=update.effective_user.id)
-            user = await sync_to_async(lambda: telegram_user.user)()
-            user_role = await sync_to_async(lambda: user.role)()
+            user = telegram_user.user
+            user_role = user.role
             
             # Получаем задачи в зависимости от роли
             if user_role == 'admin':
@@ -839,7 +839,12 @@ class ConstructionBot:
     async def button_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработчик нажатий на кнопки"""
         query = update.callback_query
-        await query.answer()
+        try:
+            await query.answer()
+        except Exception as e:
+            # Игнорируем ошибки "Query is too old" - это нормально
+            if "Query is too old" not in str(e):
+                logger.warning(f"Ошибка при ответе на callback query: {e}")
         
         data = query.data
         print(f"[CALLBACK] Получен callback: {data}")
