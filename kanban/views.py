@@ -177,11 +177,16 @@ def kanban_board(request, project_id):
             project.created_by == request.user or
             project.foreman == request.user
         ),
-        'can_add_expenses': project.members.filter(
-            user=request.user,
-            can_add_expenses=True,
-            is_active=True
-        ).exists() or request.user.is_admin_role()
+        'can_add_expenses': (
+            request.user.is_admin_role() or
+            project.created_by == request.user or
+            project.foreman == request.user or
+            project.members.filter(
+                user=request.user,
+                can_add_expenses=True,
+                is_active=True
+            ).exists()
+        )
     }
     
     return render(request, 'kanban/board.html', context)
@@ -195,8 +200,12 @@ def create_expense_item(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     
     # Проверяем права на добавление расходов
-    if not (request.user.is_admin_role() or 
-            project.members.filter(user=request.user, can_add_expenses=True, is_active=True).exists()):
+    if not (
+        request.user.is_admin_role() or
+        project.created_by == request.user or
+        project.foreman == request.user or
+        project.members.filter(user=request.user, can_add_expenses=True, is_active=True).exists()
+    ):
         return JsonResponse({'error': 'Недостаточно прав'}, status=403)
     
     try:
