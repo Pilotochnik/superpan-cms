@@ -22,6 +22,7 @@ if DEBUG:
         '127.0.0.1', 
         '0.0.0.0',
         '192.168.0.116',     # Локальный IP для доступа с телефона
+        'testserver',        # Для Django тестов
         '*.ngrok-free.app',  # Для ngrok
         '*.ngrok.io',        # Для старых версий ngrok
         '*.serveo.net',      # Для serveo

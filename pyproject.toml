@@ -30,16 +30,10 @@ sections = ["FUTURE", "STDLIB", "THIRDPARTY", "DJANGO", "FIRSTPARTY", "LOCALFOLD
 skip = ["migrations", "venv", ".venv"]
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "superpan.settings"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 addopts = [
     "--strict-markers",
-    "--strict-config",
-    "--cov=.",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
-    "--cov-fail-under=80"
+    "--strict-config"
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
@@ -52,7 +46,7 @@ exclude_dirs = ["tests", "venv", ".venv", "migrations"]
 skips = ["B101", "B601"]  # Skip assert_used and shell=True
 
 [tool.coverage.run]
-source = "."
+source = ["."]
 omit = [
     "*/migrations/*",
     "*/venv/*",

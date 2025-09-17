@@ -5,6 +5,10 @@ from django.core.paginator import Paginator
 from django.db.models import Sum, F
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
+import logging
 
 from .models import WarehouseCategory, WarehouseItem, WarehouseTransaction, ProjectEquipment
 from .forms import (
@@ -140,21 +144,48 @@ def warehouse_item_edit(request, item_id):
 
 @login_required
 def warehouse_transaction_create(request):
-    """Создание транзакции склада"""
+    """Создание транзакции склада с атомарностью и проверками"""
     if request.method == 'POST':
         form = WarehouseTransactionForm(request.POST)
         if form.is_valid():
-            transaction = form.save(commit=False)
-            transaction.created_by = request.user
-            transaction.save()
-            messages.success(request, _('Транзакция успешно создана.'))
-            return redirect('warehouse:transactions_list')
+            try:
+                with transaction.atomic():
+                    # Получаем данные из формы
+                    item = form.cleaned_data['item']
+                    transaction_type = form.cleaned_data['transaction_type']
+                    quantity = form.cleaned_data['quantity']
+                    
+                    # Проверяем на отрицательные остатки для расходных операций
+                    if transaction_type == 'OUT':
+                        if item.current_quantity < quantity:
+                            raise ValidationError(
+                                f'Недостаточно товара на складе. '
+                                f'Доступно: {item.current_quantity}, требуется: {quantity}'
+                            )
+                    
+                    # Создаем транзакцию
+                    warehouse_transaction = form.save(commit=False)
+                    warehouse_transaction.created_by = request.user
+                    warehouse_transaction.save()
+                    
+                    # Безопасно обновляем количество товара
+                    item.update_quantity(transaction_type, quantity, request.user)
+                    
+                    messages.success(request, 'Транзакция успешно создана.')
+                    return redirect('warehouse:transactions_list')
+                    
+            except ValidationError as e:
+                messages.error(request, str(e))
+            except Exception as e:
+                logger = logging.getLogger(__name__)
+                logger.error(f'Ошибка создания транзакции: {e}')
+                messages.error(request, 'Произошла ошибка при создании транзакции.')
     else:
         form = WarehouseTransactionForm()
     
     context = {
         'form': form,
-        'title': _('Создание транзакции'),
+        'title': 'Создание транзакции',
     }
     
     return render(request, 'warehouse/transaction_form.html', context)

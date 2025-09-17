@@ -98,6 +98,48 @@ class WarehouseItem(models.Model):
     def is_low_stock(self):
         """Проверка на низкий остаток"""
         return self.current_quantity <= self.min_quantity
+    
+    def update_quantity(self, transaction_type, quantity, user=None):
+        """Безопасное обновление количества товара"""
+        from django.db import transaction
+        from django.core.exceptions import ValidationError
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        with transaction.atomic():
+            # Блокируем запись для предотвращения race conditions
+            item = WarehouseItem.objects.select_for_update().get(pk=self.pk)
+            
+            old_quantity = item.current_quantity
+            
+            if transaction_type == 'IN':
+                item.current_quantity += quantity
+            elif transaction_type == 'OUT':
+                if item.current_quantity < quantity:
+                    raise ValidationError(
+                        f'Недостаточно товара на складе. '
+                        f'Доступно: {item.current_quantity}, требуется: {quantity}'
+                    )
+                item.current_quantity -= quantity
+            elif transaction_type == 'ADJUSTMENT':
+                item.current_quantity = quantity
+            
+            # Проверяем, что итоговое количество не отрицательное
+            if item.current_quantity < 0:
+                raise ValidationError('Итоговое количество не может быть отрицательным')
+            
+            item.save()
+            
+            # Логируем операцию
+            if user:
+                logger.info(
+                    f'Обновление количества: {user.username} '
+                    f'{transaction_type} {quantity} {item.name} '
+                    f'({old_quantity} → {item.current_quantity})'
+                )
+            
+            return item
 
 class WarehouseTransaction(models.Model):
     """Транзакции склада (приход/расход)"""
