@@ -116,9 +116,9 @@ class Project(models.Model):
         
         total_spent = ExpenseItem.objects.filter(
             project=self,
-            status='approved'
+            status='done'
         ).aggregate(
-            total=models.Sum('estimated_hours')
+            total=models.Sum('amount')
         )['total'] or Decimal('0.00')
         
         self.spent_amount = total_spent
@@ -405,9 +405,9 @@ class ProjectEstimate(models.Model):
         
         total_spent = ExpenseItem.objects.filter(
             project=self.project,
-            status='approved'
+            status='done'
         ).aggregate(
-            total=models.Sum('estimated_hours')
+            total=models.Sum('amount')
         )['total'] or Decimal('0.00')
         
         self.spent_amount = total_spent

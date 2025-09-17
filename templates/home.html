@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SuperPan - Главная{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="text-center py-5">
+                <!-- Логотип -->
+                <div class="mb-4">
+                    <div class="d-inline-block bg-primary rounded-circle p-4 mb-3">
+                        <i class="bi bi-building display-4 text-white"></i>
+                    </div>
+                    <h1 class="display-4 fw-bold text-primary mb-3">SuperPan</h1>
+                    <p class="lead text-muted">Система управления строительными проектами</p>
+                </div>
+
+                {% if user.is_authenticated %}
+                    <!-- Авторизованный пользователь -->
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-4">
+                                <div class="d-inline-block bg-success rounded-circle p-3 mb-3">
+                                    <i class="bi bi-check-circle display-6 text-white"></i>
+                                </div>
+                                <h3 class="text-success mb-3">Добро пожаловать, {{ user.get_full_name|default:user.username }}!</h3>
+                                <p class="text-muted">Вы успешно авторизованы в системе</p>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <a href="{% url 'projects:dashboard' %}" class="btn btn-primary btn-lg w-100 py-3">
+                                        <i class="bi bi-kanban me-2"></i>Проекты
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{% url 'projects:dashboard' %}" class="btn btn-info btn-lg w-100 py-3">
+                                        <i class="bi bi-list-task me-2"></i>Канбан
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{% url 'warehouse:items_list' %}" class="btn btn-warning btn-lg w-100 py-3">
+                                        <i class="bi bi-box-seam me-2"></i>Склад
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <a href="{% url 'accounts:logout' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Выйти
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Неавторизованный пользователь -->
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-4">
+                                <div class="d-inline-block bg-warning rounded-circle p-3 mb-3">
+                                    <i class="bi bi-key display-6 text-white"></i>
+                                </div>
+                                <h3 class="mb-3">Авторизация через Telegram</h3>
+                                <p class="text-muted">Для входа в систему используйте Telegram</p>
+                            </div>
+                            
+                            <!-- Инструкция -->
+                            <div class="alert alert-info text-start mb-4">
+                                <h5 class="alert-heading">
+                                    <i class="bi bi-info-circle me-2"></i>Как авторизоваться:
+                                </h5>
+                                <ol class="mb-0">
+                                    <li>Нажмите кнопку "Войти через Telegram"</li>
+                                    <li>Откроется Telegram с нашим ботом</li>
+                                    <li>Отправьте боту команду <code>/start login</code></li>
+                                    <li>Получите уникальную ссылку для входа</li>
+                                    <li>Вернитесь на сайт и перейдите по ссылке</li>
+                                </ol>
+                            </div>
+                            
+                            <!-- Кнопки действий -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <a href="{% url 'accounts:telegram_login' %}" class="btn btn-primary btn-lg w-100 py-3">
+                                        <i class="bi bi-telegram me-2"></i>Войти через Telegram
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="https://t.me/projectpanell_bot" target="_blank" class="btn btn-outline-primary btn-lg w-100 py-3">
+                                        <i class="bi bi-telegram me-2"></i>Открыть бота в Telegram
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- Дополнительная информация -->
+                            <div class="text-center mt-4">
+                                <small class="text-muted">
+                                    <i class="bi bi-shield-check me-1"></i>
+                                    Безопасная авторизация через Telegram
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Дополнительная информация -->
+                <div class="row mt-5">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="d-inline-block bg-light rounded-circle p-3 mb-3">
+                                <i class="bi bi-building text-primary display-6"></i>
+                            </div>
+                            <h5>Управление проектами</h5>
+                            <p class="text-muted">Создавайте и контролируйте строительные проекты</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="d-inline-block bg-light rounded-circle p-3 mb-3">
+                                <i class="bi bi-people text-info display-6"></i>
+                            </div>
+                            <h5>Командная работа</h5>
+                            <p class="text-muted">Совместная работа над задачами и проектами</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="d-inline-block bg-light rounded-circle p-3 mb-3">
+                                <i class="bi bi-graph-up text-success display-6"></i>
+                            </div>
+                            <h5>Аналитика</h5>
+                            <p class="text-muted">Отчеты и статистика по проектам</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Автоматический переход для авторизованных пользователей
+{% if user.is_authenticated %}
+    // Можно добавить автоматический переход на дашборд через 3 секунды
+    // setTimeout(function() {
+    //     window.location.href = '{% url "projects:dashboard" %}';
+    // }, 3000);
+{% endif %}
+</script>
+{% endblock %}

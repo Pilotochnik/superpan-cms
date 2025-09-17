@@ -92,8 +92,83 @@ class ConstructionBot:
                 print(f"[AUTH] Найден токен авторизации: {auth_token}")
                 await self.handle_auth_token(update, context, auth_token, user)
                 return
+            elif context.args[0] == 'login':
+                # Пользователь отправил /start login - проверяем авторизацию
+                try:
+                    # Проверяем, есть ли пользователь в системе
+                    telegram_user = await sync_to_async(TelegramUser.objects.get)(telegram_id=user.id)
+                    django_user = await sync_to_async(lambda: telegram_user.user)()
+                    user_name = await sync_to_async(lambda: django_user.get_full_name())()
+                    user_role_display = await sync_to_async(lambda: django_user.get_role_display())()
+                    
+                    # Пользователь найден - показываем стандартное меню
+                    welcome_text = f"""
+🏗️ Добро пожаловать в систему управления проектами, {user_name}!
+
+Ваша роль: {user_role_display}
+
+Выберите действие:
+                    """
+                    
+                    # Создаем URL для перехода в панель
+                    from django.urls import reverse
+                    from django.contrib.sites.models import Site
+                    
+                    # Получаем домен сайта
+                    try:
+                        current_site = await sync_to_async(Site.objects.get_current)()
+                        domain = current_site.domain
+                    except:
+                        domain = "127.0.0.1:8000"  # Fallback для разработки
+                    
+                    # Создаем токен для автоматического входа
+                    from accounts.models import TelegramAuthToken
+                    import uuid
+                    from datetime import datetime, timedelta
+                    
+                    # Создаем временный токен для входа в панель
+                    login_token = str(uuid.uuid4())
+                    from django.utils import timezone
+                    expires_at = timezone.now() + timedelta(minutes=30)  # Токен действует 30 минут
+                    
+                    login_auth_token = await sync_to_async(TelegramAuthToken.objects.create)(
+                        token=login_token,
+                        user=django_user,
+                        telegram_user=telegram_user,
+                        expires_at=expires_at,
+                        is_used=False
+                    )
+                    
+                    print(f"[AUTH] Создан токен для входа: {login_token}, истекает: {expires_at}")
+                    
+                    # URL для автоматического входа
+                    panel_url = f"http://{domain}{reverse('accounts:telegram_login')}?auth_token={login_token}"
+                    
+                    keyboard = [
+                        [InlineKeyboardButton("🌐 Вернуться в панель", url=panel_url)],
+                        [InlineKeyboardButton("📋 Мои задачи", callback_data="tasks")],
+                        [InlineKeyboardButton("🏗️ Проекты", callback_data="projects")],
+                        [InlineKeyboardButton("➕ Создать задачу", callback_data="create_task")],
+                    ]
+                    
+                    reply_markup = InlineKeyboardMarkup(keyboard)
+                    await update.message.reply_text(welcome_text, reply_markup=reply_markup)
+                    return
+                    
+                except TelegramUser.DoesNotExist:
+                    # Пользователь не найден в системе
+                    await update.message.reply_text(
+                        "❌ **Доступ запрещен**\n\n"
+                        "Вы не авторизованы в системе управления проектами.\n\n"
+                        "Обратитесь к администратору для получения доступа."
+                    )
+                    return
             else:
                 print(f"[WARN] Первый аргумент не содержит 'auth_': '{context.args[0]}'")
+                await update.message.reply_text(
+                    "❓ Неизвестная команда. Используйте /help для получения справки."
+                )
+                return
         else:
             print("[WARN] Нет аргументов в команде /start")
         
@@ -105,8 +180,9 @@ class ConstructionBot:
             
             user_role_display = await sync_to_async(lambda: django_user.get_role_display())()
             welcome_text = f"""
-🏗️ Привет, {user_name}!
-Роль: {user_role_display}
+🏗️ Добро пожаловать в систему управления проектами, {user_name}!
+
+Ваша роль: {user_role_display}
 
 Выберите действие:
             """
@@ -446,6 +522,247 @@ class ConstructionBot:
             logger.error(f"Ошибка в projects_command: {e}")
             await self.send_message(update, "❌ Произошла ошибка при получении проектов.")
     
+    async def show_main_menu(self, query, context: ContextTypes.DEFAULT_TYPE):
+        """Показать главное меню"""
+        try:
+            telegram_user = await sync_to_async(TelegramUser.objects.get)(telegram_id=query.from_user.id)
+            user = await sync_to_async(lambda: telegram_user.user)()
+            user_name = await sync_to_async(lambda: user.get_full_name())()
+            user_role_display = await sync_to_async(lambda: user.get_role_display())()
+            
+            welcome_text = f"""
+🏗️ Добро пожаловать в систему управления проектами, {user_name}!
+
+Ваша роль: {user_role_display}
+
+Выберите действие:
+            """
+            
+            # Создаем URL для перехода в панель
+            from django.urls import reverse
+            from django.contrib.sites.models import Site
+            
+            # Получаем домен сайта
+            try:
+                current_site = await sync_to_async(Site.objects.get_current)()
+                domain = current_site.domain
+            except:
+                domain = "127.0.0.1:8000"  # Fallback для разработки
+            
+            # Создаем токен для автоматического входа
+            from accounts.models import TelegramAuthToken
+            import uuid
+            from datetime import datetime, timedelta
+            
+            # Создаем временный токен для входа в панель
+            login_token = str(uuid.uuid4())
+            from django.utils import timezone
+            expires_at = timezone.now() + timedelta(minutes=30)  # Токен действует 30 минут
+            
+            login_auth_token = await sync_to_async(TelegramAuthToken.objects.create)(
+                token=login_token,
+                user=user,
+                telegram_user=telegram_user,
+                expires_at=expires_at,
+                is_used=False
+            )
+            
+            print(f"[AUTH] Создан токен для входа: {login_token}, истекает: {expires_at}")
+            
+            # URL для автоматического входа
+            panel_url = f"http://{domain}{reverse('accounts:telegram_login')}?auth_token={login_token}"
+            
+            keyboard = [
+                [InlineKeyboardButton("🌐 Вернуться в панель", url=panel_url)],
+                [InlineKeyboardButton("📋 Мои задачи", callback_data="tasks")],
+                [InlineKeyboardButton("🏗️ Проекты", callback_data="projects")],
+                [InlineKeyboardButton("➕ Создать задачу", callback_data="create_task")],
+                [InlineKeyboardButton("❓ Помощь", callback_data="help")]
+            ]
+            
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            await query.edit_message_text(welcome_text, reply_markup=reply_markup)
+            
+        except Exception as e:
+            logger.error(f"Ошибка в show_main_menu: {e}")
+            await query.edit_message_text("❌ Произошла ошибка при загрузке главного меню.")
+
+    async def handle_projects_callback(self, query, context: ContextTypes.DEFAULT_TYPE):
+        """Обработчик callback для проектов"""
+        try:
+            telegram_user = await sync_to_async(TelegramUser.objects.get)(telegram_id=query.from_user.id)
+            user = await sync_to_async(lambda: telegram_user.user)()
+            user_role = await sync_to_async(lambda: user.role)()
+            
+            # Получаем проекты через метод get_accessible_projects()
+            projects = await sync_to_async(lambda: list(user.get_accessible_projects().order_by('-created_at')[:10]))()
+            
+            if not projects:
+                role_text = {
+                    'admin': 'администратор',
+                    'foreman': 'прораб',
+                    'warehouse_keeper': 'кладовщик',
+                    'supplier': 'снабженец',
+                    'contractor': 'подрядчик'
+                }.get(user_role, 'пользователь')
+                
+                await query.edit_message_text(f"📭 У вас как {role_text} пока нет доступных проектов.")
+                return
+            
+            user_role_display = await sync_to_async(lambda: user.get_role_display())()
+            text = f"🏗️ Проекты ({user_role_display}):\n\n"
+            keyboard = []
+            
+            # Подготавливаем данные для всех проектов
+            for project in projects[:10]:  # Показываем только первые 10
+                try:
+                    project_name = await sync_to_async(lambda: project.name[:30] + "..." if len(project.name) > 30 else project.name)()
+                    project_budget = await sync_to_async(lambda: project.budget)()
+                    project_status = await sync_to_async(lambda: project.status)()
+                    
+                    status_emoji = {
+                        'planning': '📋',
+                        'active': '🚧',
+                        'completed': '✅',
+                        'on_hold': '⏸️',
+                        'cancelled': '❌'
+                    }.get(project_status, '📝')
+                    
+                    text += f"{status_emoji} {project_name}\n"
+                    text += f"   💰 Бюджет: {project_budget:,}₽\n\n"
+                    
+                    keyboard.append([InlineKeyboardButton(
+                        f"{status_emoji} {project_name[:20]}...",
+                        callback_data=f"project_{project.id}"
+                    )])
+                    
+                except Exception as e:
+                    logger.error(f"Ошибка при обработке проекта: {e}")
+                    continue
+            
+            keyboard.append([InlineKeyboardButton("🔙 Главное меню", callback_data="main_menu")])
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await query.edit_message_text(text, reply_markup=reply_markup)
+            
+        except Exception as e:
+            logger.error(f"Ошибка в handle_projects_callback: {e}")
+            await query.edit_message_text("❌ Произошла ошибка при получении проектов.")
+
+    async def handle_tasks_callback(self, query, context: ContextTypes.DEFAULT_TYPE):
+        """Обработчик callback для задач"""
+        try:
+            telegram_user = await sync_to_async(TelegramUser.objects.get)(telegram_id=query.from_user.id)
+            user = await sync_to_async(lambda: telegram_user.user)()
+            user_role = await sync_to_async(lambda: user.role)()
+            
+            # Получаем задачи в зависимости от роли
+            if user_role == 'admin':
+                # Администратор видит все задачи
+                tasks = await sync_to_async(lambda: list(ExpenseItem.objects.all().order_by('-created_at')[:15]))()
+            elif user_role == 'foreman':
+                # Прораб видит задачи своих проектов
+                projects = await sync_to_async(lambda: list(Project.objects.filter(
+                    Q(foreman=user) | Q(created_by=user)
+                ).values_list('id', flat=True)))()
+                tasks = await sync_to_async(lambda: list(ExpenseItem.objects.filter(
+                    project_id__in=projects
+                ).order_by('-created_at')[:15]))()
+            else:
+                # Остальные роли видят свои задачи
+                tasks = await sync_to_async(lambda: list(ExpenseItem.objects.filter(
+                    Q(created_by=user) | Q(assigned_to=user)
+                ).order_by('-created_at')[:15]))()
+            
+            if not tasks:
+                role_text = {
+                    'admin': 'администратор',
+                    'foreman': 'прораб',
+                    'warehouse_keeper': 'кладовщик',
+                    'supplier': 'снабженец',
+                    'contractor': 'подрядчик'
+                }.get(user_role, 'пользователь')
+                
+                await query.edit_message_text(f"📭 У вас как {role_text} пока нет задач.")
+                return
+            
+            user_role_display = await sync_to_async(lambda: user.get_role_display())()
+            text = f"📋 Задачи ({user_role_display}):\n\n"
+            keyboard = []
+            
+            # Подготавливаем данные для всех задач
+            task_data = []
+            for task in tasks:
+                try:
+                    task_status = await sync_to_async(lambda: task.status)()
+                except:
+                    task_status = 'unknown'
+                
+                status_emoji = {
+                    'new': '🆕',
+                    'todo': '📝',
+                    'in_progress': '🚧',
+                    'review': '👀',
+                    'done': '✅',
+                    'cancelled': '❌'
+                }.get(task_status, '❓')
+                
+                # Получаем информацию о проекте
+                project_name = "Без проекта"
+                try:
+                    has_project = await sync_to_async(lambda: hasattr(task, 'project') and task.project is not None)()
+                    if has_project:
+                        project_name = await sync_to_async(lambda: task.project.name[:20] + "..." if len(task.project.name) > 20 else task.project.name)()
+                except:
+                    project_name = "Проект"
+                
+                # Определяем роль в задаче
+                task_role = "👤 Участник"
+                if await sync_to_async(lambda: task.created_by == user)():
+                    task_role = "👑 Создатель"
+                else:
+                    try:
+                        has_assigned_to = await sync_to_async(lambda: hasattr(task, 'assigned_to') and task.assigned_to is not None)()
+                        if has_assigned_to and await sync_to_async(lambda: task.assigned_to == user)():
+                            task_role = "🎯 Исполнитель"
+                    except:
+                        pass
+                
+                task_data.append({
+                    'task': task,
+                    'status_emoji': status_emoji,
+                    'project_name': project_name,
+                    'task_role': task_role
+                })
+            
+            # Формируем сообщение и клавиатуру
+            for i, task_info in enumerate(task_data[:10]):  # Показываем только первые 10
+                task = task_info['task']
+                status_emoji = task_info['status_emoji']
+                project_name = task_info['project_name']
+                task_role = task_info['task_role']
+                
+                task_title = await sync_to_async(lambda: task.title[:30] + "..." if len(task.title) > 30 else task.title)()
+                text += f"{status_emoji} {task_title}\n"
+                text += f"   📁 {project_name} | {task_role}\n\n"
+                
+                task_id = await sync_to_async(lambda: task.id)()
+                keyboard.append([InlineKeyboardButton(
+                    f"{status_emoji} {task_title[:20]}...",
+                    callback_data=f"task_{task_id}"
+                )])
+            
+            keyboard.append([InlineKeyboardButton("🔙 Главное меню", callback_data="main_menu")])
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            
+            await query.edit_message_text(text, reply_markup=reply_markup)
+            
+        except Exception as e:
+            logger.error(f"Ошибка в handle_tasks_callback: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            await query.edit_message_text("❌ Произошла ошибка при получении задач.")
+
     async def tasks_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Команда /tasks - показать задачи пользователя"""
         try:
@@ -854,17 +1171,17 @@ class ConstructionBot:
             mock_update = Update(update_id=update.update_id, callback_query=query)
             await self.tasks_command(mock_update, context)
         elif data == "projects":
-            mock_update = Update(update_id=update.update_id, callback_query=query)
-            await self.projects_command(mock_update, context)
+            await self.handle_projects_callback(query, context)
         elif data == "tasks":
-            mock_update = Update(update_id=update.update_id, callback_query=query)
-            await self.tasks_command(mock_update, context)
+            await self.handle_tasks_callback(query, context)
         elif data == "create_task":
             mock_update = Update(update_id=update.update_id, callback_query=query)
             await self.create_task_command(mock_update, context)
         elif data == "help":
             mock_update = Update(update_id=update.update_id, callback_query=query)
             await self.help_command(mock_update, context)
+        elif data == "main_menu":
+            await self.show_main_menu(query, context)
         elif data == "stages":
             mock_update = Update(update_id=update.update_id, callback_query=query)
             await self.stages_command(mock_update, context)

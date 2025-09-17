@@ -1,0 +1,253 @@
+/* Complete Icons Set - Полный набор всех иконок для проекта */
+
+/* ========== НАВИГАЦИЯ ========== */
+.bi-house::before { content: "🏠"; }
+.bi-house-door::before { content: "🚪"; }
+.bi-folder::before { content: "📁"; }
+.bi-folder-fill::before { content: "📁"; }
+.bi-folder-plus::before { content: "📁➕"; }
+.bi-calculator::before { content: "🧮"; }
+.bi-box-seam::before { content: "📦"; }
+.bi-person::before { content: "👤"; }
+.bi-person-fill::before { content: "👤"; }
+.bi-person-circle::before { content: "👤"; }
+.bi-gear::before { content: "⚙️"; }
+.bi-gear-fill::before { content: "⚙️"; }
+.bi-box-arrow-right::before { content: "🚪"; }
+.bi-list::before { content: "📋"; }
+.bi-building::before { content: "🏢"; }
+.bi-building-fill::before { content: "🏢"; }
+
+/* ========== СТАТУСЫ И УВЕДОМЛЕНИЯ ========== */
+.bi-check-circle::before { content: "✅"; }
+.bi-check-circle-fill::before { content: "✅"; }
+.bi-x-circle::before { content: "❌"; }
+.bi-x-circle-fill::before { content: "❌"; }
+.bi-exclamation-triangle::before { content: "⚠️"; }
+.bi-exclamation-triangle-fill::before { content: "⚠️"; }
+.bi-exclamation-circle::before { content: "❓"; }
+.bi-exclamation-circle-fill::before { content: "❓"; }
+.bi-info-circle::before { content: "ℹ️"; }
+.bi-info-circle-fill::before { content: "ℹ️"; }
+.bi-question-circle::before { content: "❓"; }
+.bi-circle-fill::before { content: "●"; }
+
+/* ========== КАНБАН И ЗАДАЧИ ========== */
+.bi-kanban::before { content: "📋"; }
+.bi-list-task::before { content: "📝"; }
+.bi-activity::before { content: "📊"; }
+.bi-clock::before { content: "🕐"; }
+.bi-clock-fill::before { content: "🕐"; }
+.bi-clock-history::before { content: "🕐"; }
+.bi-hourglass-split::before { content: "⏳"; }
+.bi-calendar::before { content: "📅"; }
+.bi-calendar-fill::before { content: "📅"; }
+
+/* ========== КНОПКИ ДЕЙСТВИЙ ========== */
+.bi-plus::before { content: "➕"; }
+.bi-plus-circle::before { content: "➕"; }
+.bi-plus-circle-fill::before { content: "➕"; }
+.bi-dash::before { content: "➖"; }
+.bi-dash-circle::before { content: "➖"; }
+.bi-x::before { content: "❌"; }
+.bi-check::before { content: "✅"; }
+.bi-pencil::before { content: "✏️"; }
+.bi-pencil-square::before { content: "✏️"; }
+.bi-trash::before { content: "🗑️"; }
+.bi-trash-fill::before { content: "🗑️"; }
+.bi-eye::before { content: "👁️"; }
+.bi-eye-fill::before { content: "👁️"; }
+.bi-search::before { content: "🔍"; }
+
+/* ========== СТРЕЛКИ И НАВИГАЦИЯ ========== */
+.bi-arrow-left::before { content: "⬅️"; }
+.bi-arrow-right::before { content: "➡️"; }
+.bi-arrow-up::before { content: "⬆️"; }
+.bi-arrow-down::before { content: "⬇️"; }
+.bi-arrow-left-circle::before { content: "⬅️"; }
+.bi-arrow-right-circle::before { content: "➡️"; }
+.bi-arrow-up-circle::before { content: "⬆️"; }
+.bi-arrow-down-circle::before { content: "⬇️"; }
+.bi-chevron-left::before { content: "◀️"; }
+.bi-chevron-right::before { content: "▶️"; }
+.bi-chevron-up::before { content: "⬆️"; }
+.bi-chevron-down::before { content: "⬇️"; }
+
+/* ========== ФАЙЛЫ И ДОКУМЕНТЫ ========== */
+.bi-file-earmark::before { content: "📄"; }
+.bi-file-earmark-text::before { content: "📄"; }
+.bi-file-earmark-image::before { content: "🖼️"; }
+.bi-file-earmark-pdf::before { content: "📕"; }
+.bi-file-earmark-word::before { content: "📘"; }
+.bi-file-earmark-excel::before { content: "📗"; }
+.bi-file-earmark-zip::before { content: "🗜️"; }
+.bi-file-earmark-music::before { content: "🎵"; }
+.bi-file-earmark-video::before { content: "🎬"; }
+.bi-image::before { content: "🖼️"; }
+.bi-image-fill::before { content: "🖼️"; }
+.bi-paperclip::before { content: "📎"; }
+.bi-download::before { content: "⬇️"; }
+.bi-upload::before { content: "⬆️"; }
+.bi-cloud-upload::before { content: "☁️⬆️"; }
+
+/* ========== ЧАТ И КОММЕНТАРИИ ========== */
+.bi-chat::before { content: "💬"; }
+.bi-chat-dots::before { content: "💬"; }
+.bi-chat-fill::before { content: "💬"; }
+.bi-chat-dots-fill::before { content: "💬"; }
+
+/* ========== СОЦИАЛЬНЫЕ СЕТИ ========== */
+.bi-telegram::before { content: "📱"; }
+.bi-whatsapp::before { content: "💬"; }
+.bi-facebook::before { content: "📘"; }
+.bi-instagram::before { content: "📷"; }
+.bi-twitter::before { content: "🐦"; }
+.bi-linkedin::before { content: "💼"; }
+.bi-github::before { content: "🐙"; }
+
+/* ========== УВЕДОМЛЕНИЯ ========== */
+.bi-bell::before { content: "🔔"; }
+.bi-bell-fill::before { content: "🔔"; }
+.bi-envelope::before { content: "✉️"; }
+.bi-envelope-fill::before { content: "✉️"; }
+.bi-telephone::before { content: "📞"; }
+.bi-telephone-fill::before { content: "📞"; }
+
+/* ========== МЕДИА ========== */
+.bi-play::before { content: "▶️"; }
+.bi-play-fill::before { content: "▶️"; }
+.bi-play-circle::before { content: "▶️"; }
+.bi-play-circle-fill::before { content: "▶️"; }
+.bi-pause::before { content: "⏸️"; }
+.bi-pause-fill::before { content: "⏸️"; }
+.bi-stop::before { content: "⏹️"; }
+.bi-stop-fill::before { content: "⏹️"; }
+.bi-volume-up::before { content: "🔊"; }
+.bi-volume-up-fill::before { content: "🔊"; }
+.bi-volume-down::before { content: "🔉"; }
+.bi-volume-down-fill::before { content: "🔉"; }
+.bi-volume-mute::before { content: "🔇"; }
+.bi-volume-mute-fill::before { content: "🔇"; }
+
+/* ========== ГРАФИКИ И АНАЛИТИКА ========== */
+.bi-graph-up::before { content: "📈"; }
+.bi-graph-up-arrow::before { content: "📈"; }
+.bi-bar-chart::before { content: "📊"; }
+.bi-bar-chart-fill::before { content: "📊"; }
+.bi-pie-chart::before { content: "🥧"; }
+.bi-pie-chart-fill::before { content: "🥧"; }
+
+/* ========== ДЕНЬГИ И ФИНАНСЫ ========== */
+.bi-currency-dollar::before { content: "💰"; }
+.bi-wallet::before { content: "👛"; }
+.bi-wallet2::before { content: "👛"; }
+.bi-cash::before { content: "💵"; }
+.bi-credit-card::before { content: "💳"; }
+
+/* ========== ПОЛЬЗОВАТЕЛИ И ЛЮДИ ========== */
+.bi-people::before { content: "👥"; }
+.bi-people-fill::before { content: "👥"; }
+.bi-person-check::before { content: "✅👤"; }
+.bi-person-plus::before { content: "➕👤"; }
+.bi-person-dash::before { content: "➖👤"; }
+.bi-person-x::before { content: "❌👤"; }
+
+/* ========== ИНСТРУМЕНТЫ ========== */
+.bi-tools::before { content: "🔧"; }
+.bi-wrench::before { content: "🔧"; }
+.bi-hammer::before { content: "🔨"; }
+.bi-screwdriver::before { content: "🔩"; }
+.bi-key::before { content: "🗝️"; }
+.bi-key-fill::before { content: "🗝️"; }
+.bi-lock::before { content: "🔒"; }
+.bi-lock-fill::before { content: "🔒"; }
+.bi-unlock::before { content: "🔓"; }
+.bi-unlock-fill::before { content: "🔓"; }
+
+/* ========== СПЕЦИАЛЬНЫЕ ИКОНКИ ========== */
+.bi-lightning::before { content: "⚡"; }
+.bi-lightning-fill::before { content: "⚡"; }
+.bi-shield::before { content: "🛡️"; }
+.bi-shield-check::before { content: "🛡️✅"; }
+.bi-shield-fill::before { content: "🛡️"; }
+.bi-shield-check-fill::before { content: "🛡️✅"; }
+.bi-funnel::before { content: "🔽"; }
+.bi-funnel-fill::before { content: "🔽"; }
+.bi-inbox::before { content: "📥"; }
+.bi-inbox-fill::before { content: "📥"; }
+.bi-list-ol::before { content: "🔢"; }
+.bi-list-ul::before { content: "📝"; }
+.bi-grid::before { content: "⚏"; }
+.bi-grid-3x3::before { content: "⚏"; }
+
+/* ========== ДОПОЛНИТЕЛЬНЫЕ ИКОНКИ ========== */
+.bi-arrow-left-right::before { content: "↔️"; }
+.bi-box::before { content: "📦"; }
+.bi-box-arrow-in-right::before { content: "📦➡️"; }
+.bi-bar-chart::before { content: "📊"; }
+.bi-calendar-check::before { content: "📅✅"; }
+.bi-calendar-range::before { content: "📅📅"; }
+.bi-calendar-x::before { content: "📅❌"; }
+.bi-camera::before { content: "📷"; }
+.bi-cash-stack::before { content: "💰💰"; }
+.bi-chat-left-text::before { content: "💬"; }
+.bi-chevron-double-left::before { content: "⏮️"; }
+.bi-chevron-double-right::before { content: "⏭️"; }
+.bi-circle::before { content: "⚪"; }
+.bi-copy::before { content: "📋"; }
+.bi-cursor-text::before { content: "📝"; }
+.bi-device-hdd::before { content: "💾"; }
+.bi-eye-slash::before { content: "🙈"; }
+.bi-file-earmark-excel::before { content: "📗"; }
+.bi-folder-check::before { content: "📁✅"; }
+.bi-folder-x::before { content: "📁❌"; }
+.bi-fuel-pump::before { content: "⛽"; }
+.bi-geo-alt::before { content: "📍"; }
+.bi-graph-down-arrow::before { content: "📉"; }
+.bi-hammer::before { content: "🔨"; }
+.bi-hourglass::before { content: "⏳"; }
+.bi-laptop::before { content: "💻"; }
+.bi-lightbulb::before { content: "💡"; }
+.bi-percent::before { content: "%"; }
+.bi-person-badge::before { content: "👤🏷️"; }
+.bi-person-gear::before { content: "👤⚙️"; }
+.bi-person-workspace::before { content: "👤💼"; }
+.bi-piggy-bank::before { content: "🐷💰"; }
+.bi-receipt::before { content: "🧾"; }
+.bi-send::before { content: "📤"; }
+.bi-speedometer2::before { content: "⚡"; }
+.bi-tags::before { content: "🏷️"; }
+.bi-three-dots::before { content: "⋯"; }
+.bi-truck::before { content: "🚚"; }
+
+/* ========== СТИЛИ ДЛЯ ВСЕХ ИКОНОК ========== */
+.bi::before {
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 1em;
+    line-height: 1;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.25rem;
+}
+
+/* Скрыть пустые прямоугольники */
+.bi:not([class*="bi-"])::before {
+    display: none;
+}
+
+/* Специальные стили для fill иконок */
+.bi-fill::before,
+[class*="-fill"]::before {
+    font-weight: bold;
+}
+
+/* Стили для больших иконок */
+.bi[style*="font-size"]::before {
+    font-size: inherit !important;
+}
+
+/* Анимация для иконок */
+.bi:hover::before {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}

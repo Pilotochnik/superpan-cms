@@ -5,6 +5,9 @@ app_name = 'kanban'
 
 urlpatterns = [
     
+    # Dashboard для утверждения запросов
+    path('approval-dashboard/', views.approval_dashboard, name='approval_dashboard'),
+    
     # Старые URL для расходов (для совместимости)
     path('board/<uuid:project_id>/', views.kanban_board, name='board'),
     path('expense/<uuid:pk>/', views.ExpenseItemDetailView.as_view(), name='expense_detail'),

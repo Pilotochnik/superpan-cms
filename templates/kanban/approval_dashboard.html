@@ -43,7 +43,13 @@
                     <i class="bi bi-clock-history me-2"></i>{{ title }}
                 </h2>
                 <div>
-                    <span class="badge bg-warning fs-6">{{ pending_requests.count }} ожидают</span>
+                    <a href="{% url 'projects:list' %}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-folder me-1"></i>Проекты
+                    </a>
+                    <button class="btn btn-primary" onclick="showCreateTaskModal()">
+                        <i class="bi bi-plus-circle me-1"></i>Создать задачу
+                    </button>
+                    <span class="badge bg-warning fs-6 ms-3">{{ pending_requests.count }} ожидают</span>
                 </div>
             </div>
 
@@ -232,5 +238,121 @@ function showNotification(message, type) {
         }
     }, 5000);
 }
+
+function showCreateTaskModal() {
+    // Получаем список проектов для выбора
+    fetch('/api/projects/')
+    .then(response => response.json())
+    .then(data => {
+        const projectSelect = document.getElementById('projectSelect');
+        projectSelect.innerHTML = '<option value="">Выберите проект...</option>';
+        
+        data.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project.id;
+            option.textContent = project.name;
+            projectSelect.appendChild(option);
+        });
+        
+        // Показываем модальное окно
+        const modal = new bootstrap.Modal(document.getElementById('createTaskModal'));
+        modal.show();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Ошибка при загрузке проектов', 'error');
+    });
+}
+
+function createTask() {
+    const projectId = document.getElementById('projectSelect').value;
+    const title = document.getElementById('taskTitle').value;
+    const description = document.getElementById('taskDescription').value;
+    const amount = document.getElementById('taskAmount').value;
+    
+    if (!projectId || !title || !description) {
+        showNotification('Заполните все обязательные поля', 'error');
+        return;
+    }
+    
+    fetch('/kanban/tasks/' + projectId + '/create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            title: title,
+            description: description,
+            amount: amount || 0
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Задача успешно создана', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('createTaskModal')).hide();
+            // Очищаем форму
+            document.getElementById('taskForm').reset();
+        } else {
+            showNotification(data.error || 'Ошибка при создании задачи', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Ошибка сервера', 'error');
+    });
+}
 </script>
+
+<!-- Модальное окно для создания задачи -->
+<div class="modal fade" id="createTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Создать новую задачу
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <div class="mb-3">
+                        <label for="projectSelect" class="form-label">Проект *</label>
+                        <select class="form-select" id="projectSelect" required>
+                            <option value="">Выберите проект...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Название задачи *</label>
+                        <input type="text" class="form-control" id="taskTitle" required
+                               placeholder="Введите название задачи">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Описание *</label>
+                        <textarea class="form-control" id="taskDescription" rows="4" required
+                                  placeholder="Опишите задачу подробно"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskAmount" class="form-label">Сумма (руб.)</label>
+                        <input type="number" class="form-control" id="taskAmount" 
+                               placeholder="0" min="0" step="0.01">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Отмена
+                </button>
+                <button type="button" class="btn btn-primary" onclick="createTask()">
+                    <i class="bi bi-check-circle me-1"></i>Создать задачу
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

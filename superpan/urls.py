@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
 from accounts.views import LoginView
 
 # Кастомизация админки
@@ -21,19 +21,11 @@ urlpatterns = [
     path('warehouse/', include('warehouse.urls')),
     path('api/', include('api.urls')),
     
-    # API Documentation
-    path('api/schema/', include('drf_spectacular.urls')),
-    path('api/docs/', TemplateView.as_view(
-        template_name='drf_spectacular/swagger_ui.html',
-        extra_context={'schema_url': 'api:schema'}
-    ), name='swagger-ui'),
-    path('api/redoc/', TemplateView.as_view(
-        template_name='drf_spectacular/redoc.html',
-        extra_context={'schema_url': 'api:schema'}
-    ), name='redoc'),
+    # API Documentation - временно отключено
+    # path('api/schema/', include('drf_spectacular.urls')),
     
     path('app/', TemplateView.as_view(template_name='react_app.html'), name='react_app'),
-    path('', LoginView.as_view(), name='login'),  # Root redirects to login
+    path('', RedirectView.as_view(url='/accounts/telegram-login/', permanent=False), name='home'),  # Перенаправление на авторизацию
 ]
 
 if settings.DEBUG:

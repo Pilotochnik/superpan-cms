@@ -6,7 +6,9 @@
     <title>Вход через Telegram</title>
     
     <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Fallback Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/bootstrap-icons.min.css" rel="stylesheet">
     
 <style>
     * {
@@ -197,21 +199,37 @@
     
     .telegram-icon {
         font-size: 1.6rem;
-        animation: planeFly 2s ease-in-out infinite;
+        animation: telegramLogo 2s ease-in-out infinite;
+        display: inline-block;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
     
-    @keyframes planeFly {
-        0%, 100% {
-            transform: translateX(0) rotate(0deg);
+    /* Резервные иконки если Bootstrap Icons не загрузились */
+    .bi-telegram::before {
+        content: "✈️";
+        font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    }
+    
+    .bi-list-ol::before {
+        content: "🔢";
+        font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    }
+    
+    @keyframes telegramLogo {
+        0% {
+            transform: scale(1) rotate(0deg) translateX(0);
         }
         25% {
-            transform: translateX(5px) rotate(5deg);
+            transform: scale(1.1) rotate(8deg) translateX(3px);
         }
         50% {
-            transform: translateX(0) rotate(0deg);
+            transform: scale(1.05) rotate(0deg) translateX(0);
         }
         75% {
-            transform: translateX(-3px) rotate(-3deg);
+            transform: scale(1.1) rotate(-8deg) translateX(-3px);
+        }
+        100% {
+            transform: scale(1) rotate(0deg) translateX(0);
         }
     }
     
@@ -220,6 +238,20 @@
         box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
         text-decoration: none;
         color: white;
+    }
+    
+    .login-btn:hover .telegram-icon {
+        animation: telegramFly 0.8s ease-in-out infinite;
+        transform: scale(1.2);
+    }
+    
+    @keyframes telegramFly {
+        0%, 100% {
+            transform: scale(1.2) rotate(0deg) translateX(0);
+        }
+        50% {
+            transform: scale(1.3) rotate(15deg) translateX(5px);
+        }
     }
     
     .login-btn:active {
@@ -420,7 +452,7 @@
     {% endif %}
     
     <a href="https://t.me/projectpanell_bot?start=login" class="login-btn">
-        <i class="bi bi-telegram telegram-icon">✈️</i>
+        <i class="bi bi-telegram telegram-icon"></i>
         Войти через Telegram
     </a>
     
@@ -437,5 +469,31 @@
         </ol>
     </div>
 </div>
+
+<script>
+// Проверяем загрузку Bootstrap Icons
+document.addEventListener('DOMContentLoaded', function() {
+    // Проверяем, загружены ли иконки
+    const testIcon = document.createElement('i');
+    testIcon.className = 'bi bi-telegram';
+    testIcon.style.position = 'absolute';
+    testIcon.style.left = '-9999px';
+    document.body.appendChild(testIcon);
+    
+    setTimeout(function() {
+        const computedStyle = window.getComputedStyle(testIcon, '::before');
+        const content = computedStyle.content;
+        
+        // Если иконка не загрузилась, добавляем класс для резервных иконок
+        if (!content || content === '""' || content === '"\\f015"') {
+            console.log('Bootstrap Icons not loaded, using emoji fallback');
+            document.body.classList.add('icons-fallback');
+        }
+        
+        document.body.removeChild(testIcon);
+    }, 100);
+});
+</script>
+
 </body>
 </html>

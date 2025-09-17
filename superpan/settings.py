@@ -9,6 +9,10 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Кодировка по умолчанию
+DEFAULT_CHARSET = 'utf-8'
+FILE_CHARSET = 'utf-8'
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
 
@@ -48,7 +52,7 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
-    'drf_spectacular',
+    # 'drf_spectacular',  # Временно отключено
     'crispy_forms',
     'crispy_bootstrap5',
     
@@ -73,11 +77,7 @@ MIDDLEWARE = [
     'superpan.middleware.ErrorLoggingMiddleware',  # Логирование ошибок
     'superpan.middleware.SecurityHeadersMiddleware',  # Security headers
     'telegram_bot.middleware.TelegramWebhookSecurityMiddleware',  # Безопасность webhook
-    'accounts.telegram_middleware.TelegramAuthMiddleware',  # Telegram авторизация
-    'accounts.telegram_middleware.TelegramBotMiddleware',   # Telegram бот интеграция
-    'accounts.middleware.DeviceTrackingMiddleware',  # Device binding security
-    'accounts.middleware.SessionSecurityMiddleware',  # Session timeout
-    'accounts.middleware.SingleSessionMiddleware',  # Single session per user
+    'superpan.encoding_middleware.UTF8EncodingMiddleware',  # Кодировка UTF-8
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -107,6 +107,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 20,
+            'init_command': "PRAGMA encoding='UTF-8'",
+        }
     }
 }
 
@@ -134,6 +138,18 @@ LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_TZ = True
+USE_L10N = True
+
+# Настройки для правильной работы с UTF-8
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+
+# Кодировка для всех текстовых файлов
+TEXT_CHARSET = 'utf-8'
+
+# Настройки для правильной работы с UTF-8 в браузере
+DEFAULT_CONTENT_TYPE = 'text/html; charset=utf-8'
 
 # Настройки для работы через HTTPS прокси (ngrok, serveo)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -196,27 +212,27 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Временно отключено
 }
 
-# drf-spectacular settings
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'SuperPan API',
-    'DESCRIPTION': 'API для системы управления строительными проектами',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'COMPONENT_SPLIT_REQUEST': True,
-    'COMPONENT_NO_READ_ONLY_REQUIRED': True,
-    'SWAGGER_UI_SETTINGS': {
-        'deepLinking': True,
-        'persistAuthorization': True,
-        'displayOperationId': True,
-    },
-    'REDOC_UI_SETTINGS': {
-        'hideDownloadButton': True,
-        'expandResponses': '200,201',
-    },
-}
+# drf-spectacular settings - временно отключено
+# SPECTACULAR_SETTINGS = {
+#     'TITLE': 'SuperPan API',
+#     'DESCRIPTION': 'API для системы управления строительными проектами',
+#     'VERSION': '1.0.0',
+#     'SERVE_INCLUDE_SCHEMA': False,
+#     'COMPONENT_SPLIT_REQUEST': True,
+#     'COMPONENT_NO_READ_ONLY_REQUIRED': True,
+#     'SWAGGER_UI_SETTINGS': {
+#         'deepLinking': True,
+#         'persistAuthorization': True,
+#         'displayOperationId': True,
+#     },
+#     'REDOC_UI_SETTINGS': {
+#         'hideDownloadButton': True,
+#         'expandResponses': '200,201',
+#     },
+# }
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
@@ -452,10 +468,10 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
 
-# Database Security
-DATABASES['default']['OPTIONS'] = {
-    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-}
+# Database Security - убираем для SQLite
+# DATABASES['default']['OPTIONS'] = {
+#     'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+# }
 
 # Дополнительные настройки для отладки
 LOGGING['loggers']['django.security'] = {

@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from datetime import timedelta
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.generic import View
@@ -145,8 +146,10 @@ def profile_view(request):
         form = ProfileForm(instance=request.user)
     
     # Статистика пользователя
+    accessible_projects = request.user.get_accessible_projects()
     user_stats = {
         'created_projects': request.user.created_projects.count(),
+        'accessible_projects': accessible_projects.count(),
         'managed_projects': request.user.managed_projects.count() if hasattr(request.user, 'managed_projects') else 0,
         'created_expenses': request.user.created_expense_items.count(),
         'project_memberships': request.user.assigned_access_keys.filter(is_active=True).count(),

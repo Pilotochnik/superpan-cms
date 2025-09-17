@@ -80,6 +80,34 @@ def send_status_change_notification(expense_item, user, old_status, new_status):
 
 
 @login_required
+def approval_dashboard(request):
+    """Dashboard для утверждения запросов на изменение статусов"""
+    user = request.user
+    
+    # Получаем все ожидающие утверждения запросы
+    pending_requests = StatusChangeRequest.objects.filter(
+        status='pending'
+    ).select_related(
+        'expense_item__project',
+        'expense_item__created_by',
+        'requested_by'
+    ).order_by('-created_at')
+    
+    # Фильтруем по доступным проектам пользователя
+    if not user.is_superuser:
+        accessible_projects = user.get_accessible_projects()
+        pending_requests = pending_requests.filter(
+            expense_item__project__in=accessible_projects
+        )
+    
+    context = {
+        'title': 'Утверждение запросов',
+        'pending_requests': pending_requests,
+    }
+    
+    return render(request, 'kanban/approval_dashboard.html', context)
+
+@login_required
 def kanban_board(request, project_id):
     """Канбан-доска проекта"""
     project = get_object_or_404(Project, pk=project_id)

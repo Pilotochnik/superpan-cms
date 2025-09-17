@@ -1,14 +1,16 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.decorators.http import require_http_methods
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
+from django.db import models
 from django_ratelimit.decorators import ratelimit
 from decimal import Decimal
 from django.utils import timezone
+from datetime import timedelta
 import logging
 import json
 
@@ -32,8 +34,8 @@ def dashboard(request):
     # Получаем проекты в зависимости от роли пользователя с оптимизацией
     projects = user.get_accessible_projects().select_related('created_by').prefetch_related(
         'members__user',
-        'projectestimate_set',
-        'expense_items'
+        'estimate',
+        'expense_items__created_by'
     )
     
     # Статистика
@@ -261,7 +263,7 @@ def generate_access_key(request, pk):
             project_id=project.id,
             created_by=request.user,
             assigned_to=assigned_user,
-            expires_at=timezone.now() + timezone.timedelta(days=expires_days) if expires_days else None
+            expires_at=timezone.now() + timedelta(days=expires_days) if expires_days else None
         )
         
         # Создаем активность
@@ -342,7 +344,7 @@ def project_estimate(request, pk):
     # Статистика по типам расходов
     expense_stats = expenses.values('task_type').annotate(
         count=Count('id'),
-        total_hours=Sum('estimated_hours')
+        total_amount=Sum('amount')
     ).order_by('task_type')
     
     context = {
