@@ -62,7 +62,6 @@ INSTALLED_APPS = [
     'kanban',
     'admin_panel',
     'warehouse',
-    'construction',
     'telegram_bot',
 ]
 
