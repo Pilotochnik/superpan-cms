@@ -2,12 +2,23 @@ services:
   - type: web
     name: superpan
     env: python
+    region: oregon
+    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python manage.py migrate && python manage.py init_production && gunicorn superpan.wsgi
+    startCommand: python manage.py migrate && python manage.py init_production && python manage.py collectstatic --noinput && gunicorn superpan.wsgi:application
     envVars:
       - key: DEBUG
         value: False
       - key: SECRET_KEY
-        value: django-insecure-superpan-production-key-2024
+        value: django-insecure-superpan-production-key-2024-change-me
       - key: ALLOWED_HOSTS
         value: *.onrender.com,localhost,127.0.0.1
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+    healthCheckPath: /

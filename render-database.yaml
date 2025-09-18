@@ -1,0 +1,10 @@
+services:
+  - type: pserv
+    name: superpan-db
+    env: postgresql
+    region: oregon
+    plan: free
+    disk:
+      name: superpan-db-disk
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 1
