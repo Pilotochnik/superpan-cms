@@ -185,15 +185,18 @@ def register_view(request):
 @ratelimit(key='ip', rate='20/h', method='POST', block=True)
 def use_access_key(request):
     """Использование ключа доступа к проекту"""
+    if request.method == 'GET':
+        # Показываем форму для ввода ключа доступа
+        return render(request, 'accounts/use_access_key.html')
+    
     if request.method == 'POST':
         # Логируем только безопасную информацию
         logger.info(f"User {request.user.email} attempting to use access key")
         logger.debug(f"Request method: {request.method}, Content type: {request.content_type}")
         
-        # Дополнительное логирование для отладки
-        logger.info(f"POST data: {dict(request.POST)}")
+        # Дополнительное логирование для отладки (безопасно)
         logger.info(f"POST keys: {list(request.POST.keys())}")
-        logger.info(f"Raw POST body: {request.body}")
+        logger.info(f"Content type: {request.content_type}")
         
         # Обрабатываем JSON запросы
         if request.content_type == 'application/json':
@@ -221,13 +224,13 @@ def use_access_key(request):
         if form_type != 'access_key':
             logger.warning(f"Invalid form type: '{form_type}'")
             messages.error(request, 'Неверный тип формы.')
-            return redirect('accounts:profile')
+            return render(request, 'accounts/use_access_key.html')
         
         logger.info(f"User {request.user.email} attempting to use access key (length: {len(key)})")
         
         if not key:
             messages.error(request, 'Введите ключ доступа.')
-            return redirect('accounts:profile')
+            return render(request, 'accounts/use_access_key.html')
         
         # Валидация UUID формата
         import uuid
@@ -235,7 +238,7 @@ def use_access_key(request):
             uuid.UUID(key)
         except ValueError:
             messages.error(request, 'Неверный формат ключа доступа. Ключ должен быть в формате UUID.')
-            return redirect('accounts:profile')
+            return render(request, 'accounts/use_access_key.html')
         
         try:
             access_key = ProjectAccessKey.objects.get(key=key)
@@ -245,12 +248,12 @@ def use_access_key(request):
             if not access_key.is_valid():
                 logger.info(f"Access key is invalid: is_active={access_key.is_active}, expires_at={access_key.expires_at}")
                 messages.error(request, 'Ключ доступа недействителен или истек.')
-                return redirect('accounts:profile')
+                return render(request, 'accounts/use_access_key.html')
             
             # Проверяем, не назначен ли уже ключ другому пользователю
             if access_key.assigned_to and access_key.assigned_to != request.user:
                 messages.error(request, 'Этот ключ доступа уже используется другим пользователем.')
-                return redirect('accounts:profile')
+                return render(request, 'accounts/use_access_key.html')
             
             # Назначаем ключ пользователю
             if not access_key.assigned_to:
@@ -275,17 +278,17 @@ def use_access_key(request):
         except ProjectAccessKey.DoesNotExist:
             logger.warning(f"Access key not found: {key}")
             messages.error(request, 'Ключ доступа не найден.')
-            return redirect('accounts:profile')
+            return render(request, 'accounts/use_access_key.html')
         except Project.DoesNotExist:
             logger.error(f"Project not found for key: {key}")
             messages.error(request, 'Проект не найден.')
-            return redirect('accounts:profile')
+            return render(request, 'accounts/use_access_key.html')
         except Exception as e:
             logger.error(f"Unexpected error in use_access_key: {e}", exc_info=True)
             messages.error(request, 'Произошла внутренняя ошибка. Попробуйте позже.')
-            return redirect('accounts:profile')
+            return render(request, 'accounts/use_access_key.html')
     
-    return redirect('accounts:profile')
+    return render(request, 'accounts/use_access_key.html')
 
 
 @login_required
@@ -347,9 +350,9 @@ def user_activity(request):
 @login_required
 def role_info_view(request):
     """Страница с информацией о ролях и правах доступа"""
-    # Доступ только для суперпользователей
-    if not request.user.is_superuser:
-        messages.error(request, 'Доступ запрещен. Только суперпользователи могут просматривать информацию о ролях.')
+    # Доступ для суперпользователей и администраторов
+    if not (request.user.is_superuser or request.user.is_admin_role()):
+        messages.error(request, 'Доступ запрещен. Только администраторы могут просматривать информацию о ролях.')
         return redirect('accounts:profile')
     
     return render(request, 'accounts/role_info.html')

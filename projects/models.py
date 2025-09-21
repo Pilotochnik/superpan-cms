@@ -70,6 +70,12 @@ class Project(models.Model):
         verbose_name_plural = _('Проекты')
         db_table = 'projects'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status'], name='project_status_idx'),
+            models.Index(fields=['created_by'], name='project_created_by_idx'),
+            models.Index(fields=['is_active'], name='project_active_idx'),
+            models.Index(fields=['created_at'], name='project_created_at_idx'),
+        ]
 
     def __str__(self):
         return self.name

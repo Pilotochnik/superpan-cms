@@ -26,9 +26,9 @@ def dashboard(request):
     """Главная панель управления проектами"""
     user = request.user
     
-    # Доступ только для суперпользователей
-    if not user.is_superuser:
-        messages.error(request, 'Доступ запрещен. Только суперпользователи могут просматривать главную панель.')
+    # Доступ для суперпользователей и администраторов
+    if not (user.is_superuser or user.is_admin_role()):
+        messages.error(request, 'Доступ запрещен. Только администраторы могут просматривать главную панель.')
         return redirect('accounts:profile')
     
     # Получаем проекты в зависимости от роли пользователя с оптимизацией

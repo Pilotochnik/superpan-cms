@@ -179,8 +179,7 @@ def warehouse_transaction_create(request):
             except ValidationError as e:
                 messages.error(request, str(e))
             except Exception as e:
-                logger = logging.getLogger(__name__)
-                logger.error(f'Ошибка создания транзакции: {e}')
+                logger.error(f'Ошибка создания транзакции: {e}', exc_info=True)
                 messages.error(request, 'Произошла ошибка при создании транзакции.')
     else:
         form = WarehouseTransactionForm()

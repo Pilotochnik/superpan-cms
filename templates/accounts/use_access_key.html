@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Использование ключа доступа - SuperPan{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-key me-2"></i>Использование ключа доступа
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Введите ключ доступа, который вы получили от администратора проекта.
+                    </p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="access_key" class="form-label">Ключ доступа *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="access_key" 
+                                   name="access_key" 
+                                   placeholder="Введите ключ доступа"
+                                   required>
+                            <div class="form-text">
+                                Ключ должен быть в формате UUID (например: 12345678-1234-1234-1234-123456789abc)
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-2"></i>Использовать ключ
+                            </button>
+                            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Назад к профилю
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,8 +2,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
-# from drf_spectacular.utils import extend_schema, extend_schema_view  # Временно отключено
-# from drf_spectacular.types import OpenApiTypes
+from django.db.models import Count, Case, When, IntegerField
 from projects.models import Project
 from kanban.models import ExpenseItem
 from warehouse.models import WarehouseItem
@@ -52,12 +51,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def stats(self, request, pk=None):
         """Статистика проекта"""
         project = self.get_object()
-        return Response({
-            'total_tasks': project.expense_items.count(),
-            'completed_tasks': project.expense_items.filter(status='done').count(),
-            'in_progress_tasks': project.expense_items.filter(status='in_progress').count(),
-            'pending_tasks': project.expense_items.filter(status='todo').count(),
-        })
+        
+        # Оптимизированный запрос с агрегацией
+        
+        stats = project.expense_items.aggregate(
+            total_tasks=Count('id'),
+            completed_tasks=Count(Case(When(status='done', then=1), output_field=IntegerField())),
+            in_progress_tasks=Count(Case(When(status='in_progress', then=1), output_field=IntegerField())),
+            pending_tasks=Count(Case(When(status='todo', then=1), output_field=IntegerField())),
+        )
+        
+        return Response(stats)
 
 
 class TaskViewSet(viewsets.ModelViewSet):

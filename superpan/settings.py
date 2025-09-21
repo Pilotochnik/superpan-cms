@@ -278,12 +278,13 @@ if not DEBUG:
 SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'  # Изменено на Lax для мобильных устройств
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 hours
 
 # CSRF settings for security
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # Telegram Webhook Security
 TELEGRAM_WEBHOOK_SECRET = config('TELEGRAM_WEBHOOK_SECRET', default='')
@@ -315,17 +316,12 @@ if SENTRY_DSN:
         send_default_pii=False,  # Don't send personally identifiable information
         environment='development' if DEBUG else 'production',
     )
-SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 hours
-
-# CSRF settings
-CSRF_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Lax'  # Изменено на Lax для мобильных устройств
+# Удалено дублирование - настройки уже определены выше
 
 # Authentication settings
-LOGIN_URL = '/accounts/login/'
+LOGIN_URL = '/accounts/telegram-login/'
 LOGIN_REDIRECT_URL = '/projects/'
-LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGOUT_REDIRECT_URL = '/accounts/telegram-login/'
 
 # Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
