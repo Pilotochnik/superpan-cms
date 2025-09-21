@@ -107,10 +107,7 @@ class TelegramLoginView(View):
                 messages.success(request, f'Добро пожаловать, {token_obj.user.get_full_name()}!')
                 
                 # Перенаправляем в зависимости от роли
-                if token_obj.user.role == 'admin':
-                    return redirect('/management/')
-                else:
-                    return redirect('/projects/list/')
+                return redirect('/projects/list/')
                     
             except TelegramAuthToken.DoesNotExist:
                 messages.error(request, 'Неверный токен авторизации.')
@@ -178,10 +175,7 @@ class TelegramLoginView(View):
             logger.info(f"Пользователь {user.email} авторизован")
             
             # Определяем URL для перенаправления в зависимости от роли
-            if user.role == 'admin':
-                redirect_url = '/management/'
-            else:
-                redirect_url = '/projects/list/'
+            redirect_url = '/projects/list/'
             
             return JsonResponse({
                 'success': True,

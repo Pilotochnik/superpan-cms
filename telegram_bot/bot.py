@@ -20,6 +20,8 @@ django.setup()
 from accounts.models import TelegramUser, User, TelegramAuthToken
 from projects.models import Project, ProjectMember
 from kanban.models import ExpenseItem, ConstructionStage, ExpenseCategory
+from django.db import models
+from django.db.models import Q
 
 
 class ConstructionBot:
@@ -371,10 +373,10 @@ class ConstructionBot:
             
             # Получаем домен сайта
             try:
-                current_site = await sync_to_async(Site.objects.get_current)()
-                domain = current_site.domain
+                from django.conf import settings
+                domain = settings.SITE_URL.replace('http://', '').replace('https://', '')
             except:
-                domain = "127.0.0.1:8000"  # Fallback для разработки
+                domain = "194.31.174.153"  # Fallback для продакшена
             
             # Создаем токен для автоматического входа
             from accounts.models import TelegramAuthToken
@@ -1664,7 +1666,7 @@ class ConstructionBot:
                 )
             
             # Создаем задачу
-            task = await sync_to_async(ExpenseItem.objects.create)(
+            task = await sync_to_async(Task.objects.create)(
                 title=title,
                 description=description,
                 amount=amount,

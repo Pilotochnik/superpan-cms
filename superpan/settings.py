@@ -26,6 +26,7 @@ if DEBUG:
         '127.0.0.1', 
         '0.0.0.0',
         '192.168.0.116',     # Локальный IP для доступа с телефона
+        '194.31.174.153',    # Production server IP
         'testserver',        # Для Django тестов
         '*.ngrok-free.app',  # Для ngrok
         '*.ngrok.io',        # Для старых версий ngrok
@@ -38,6 +39,9 @@ else:
         ALLOWED_HOSTS = allowed_hosts_config.split(',')
     else:
         raise ValueError("ALLOWED_HOSTS must be set in production environment")
+
+# URL сайта для генерации ссылок
+SITE_URL = 'http://194.31.174.153'  # Жестко задаем для продакшена
 
 # Application definition
 INSTALLED_APPS = [

@@ -393,6 +393,60 @@
                 align-items: center;
             }
         }
+        
+        /* Специальные стили для кнопок Telegram на мобильных */
+        @media (max-width: 768px) {
+            .btn-telegram {
+                min-height: 56px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                padding: 12px 16px;
+                font-size: 0.95rem;
+                gap: 8px;
+            }
+            
+            .btn-telegram i {
+                flex-shrink: 0;
+                font-size: 1.2rem;
+            }
+            
+            .btn-telegram .btn-text {
+                flex: 1;
+                text-align: center;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .btn-telegram {
+                min-height: 60px;
+                padding: 14px 12px;
+                font-size: 0.9rem;
+                gap: 6px;
+            }
+            
+            .btn-telegram i {
+                font-size: 1.1rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .btn-telegram {
+                min-height: 58px;
+                padding: 12px 10px;
+                font-size: 0.85rem;
+                gap: 5px;
+            }
+            
+            .btn-telegram i {
+                font-size: 1rem;
+            }
+        }
     </style>
     
     {% block extra_css %}{% endblock %}

@@ -298,7 +298,11 @@ def project_members(request, pk):
         return redirect('projects:dashboard')
     
     members = project.members.filter(is_active=True).select_related('user')
-    access_keys = project.access_keys.filter(is_active=True).select_related('assigned_to')
+    from accounts.models import ProjectAccessKey
+    access_keys = ProjectAccessKey.objects.filter(
+        project_id=project.id,
+        is_active=True
+    ).select_related('assigned_to')
     
     context = {
         'project': project,

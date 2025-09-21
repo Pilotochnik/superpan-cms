@@ -197,12 +197,8 @@ class WarehouseTransaction(models.Model):
         self.total_amount = (self.quantity * self.price).quantize(Decimal('0.01'))
         super().save(*args, **kwargs)
         
-        # Обновляем текущее количество товара
-        if self.transaction_type == 'IN':
-            self.item.current_quantity += self.quantity
-        elif self.transaction_type == 'OUT':
-            self.item.current_quantity -= self.quantity
-        self.item.save()
+        # Примечание: Обновление количества товара происходит в views
+        # через метод item.update_quantity() для обеспечения атомарности
 
 class ProjectEquipment(models.Model):
     """Оборудование, используемое в проекте"""

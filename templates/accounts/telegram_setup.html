@@ -139,9 +139,9 @@ python manage.py runserver
                 Тестирование
             </h3>
             <p>Перейдите на страницу авторизации и попробуйте войти через Telegram:</p>
-            <a href="{% url 'accounts:telegram_login' %}" class="btn btn-primary">
+            <a href="{% url 'accounts:telegram_login' %}" class="btn btn-primary btn-telegram">
                 <i class="bi bi-telegram"></i>
-                Попробовать авторизацию
+                <span class="btn-text">Попробовать авторизацию</span>
             </a>
         </div>
         
@@ -150,9 +150,9 @@ python manage.py runserver
         </div>
         
         <div class="text-center mt-4">
-            <a href="{% url 'accounts:telegram_login' %}" class="btn btn-outline-secondary">
+            <a href="{% url 'accounts:telegram_login' %}" class="btn btn-outline-secondary btn-telegram">
                 <i class="bi bi-arrow-left"></i>
-                Назад к обычному входу
+                <span class="btn-text">Назад к обычному входу</span>
             </a>
         </div>
     </div>
