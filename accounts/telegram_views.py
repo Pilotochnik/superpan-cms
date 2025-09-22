@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from django.conf import settings
 import logging
+import json
 
 from .models import User, TelegramUser
 

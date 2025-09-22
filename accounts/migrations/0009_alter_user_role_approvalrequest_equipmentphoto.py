@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('accounts', '0008_alter_user_email'),
         ('kanban', '0006_constructionstage_alter_expenseitem_task_type_and_more'),
-        ('projects', '0003_estimateunit_projectestimate_approved_at_and_more'),
+        ('projects', '0001_initial'),
     ]
 
     operations = [

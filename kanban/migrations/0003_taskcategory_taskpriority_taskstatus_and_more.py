@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('kanban', '0002_expenseitem_photo_files_expenseitem_receipt_file'),
-        ('projects', '0003_estimateunit_projectestimate_approved_at_and_more'),
+        ('projects', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

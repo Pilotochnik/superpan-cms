@@ -50,9 +50,7 @@ def warehouse_dashboard(request):
 def warehouse_items_list(request):
     """Список товаров склада"""
     form = WarehouseSearchForm(request.GET)
-    items = WarehouseItem.objects.filter(is_active=True).select_related('category').prefetch_related(
-        'warehousetransaction_set__user'
-    )
+    items = WarehouseItem.objects.filter(is_active=True).select_related('category')
     
     if form.is_valid():
         search_query = form.cleaned_data.get('search_query')
